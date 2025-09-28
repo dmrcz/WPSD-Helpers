@@ -272,28 +272,28 @@ conn_check
 # DVMega sun8i stuff
 if [[ -f "$armbian_env_file" ]]; then
     # ensure our own patched wiringpi is installed
-    if [ -f '/usr/local/bin/gpio' ]; then
-	if gpio -v 2>/dev/null | grep -q "_WPSD" ; then
-	    :
-	else
-	    export GIT_HTTP_CONNECT_TIMEOUT="10"
-	    export GIT_HTTP_USER_AGENT="WPSD SlipStream Task server-side sun81 GPIO binary installer"
+    if [ -f '/usr/bin/gpio' ]; then
+	    if gpio -v 2>/dev/null | grep -q "_WPSD" ; then
+	        :
+	    else
+	        export GIT_HTTP_CONNECT_TIMEOUT="10"
+	        export GIT_HTTP_USER_AGENT="WPSD SlipStream Task server-side sun81 GPIO binary installer"
+	        cd /root
+	        rm -rf Wiring*
+ 	        git clone https://wpsd-swd.w0chp.net/WPSD-SWD/WiringNPi.git
+	        cd WiringNPi
+	        bash ./build
+	        cd .. && rm -rf WiringPi
+	    fi
+    else
 	    cd /root
 	    rm -rf Wiring*
- 	    git clone https://wpsd-swd.w0chp.net/WPSD-SWD/WiringNPi.git
+	    export GIT_HTTP_CONNECT_TIMEOUT="10"
+	    export GIT_HTTP_USER_AGENT="WPSD SlipStream Task server-side sun81 GPIO binary installer"
+	    git clone https://wpsd-swd.w0chp.net/WPSD-SWD/WiringNPi.git
 	    cd WiringNPi
 	    bash ./build
 	    cd .. && rm -rf WiringPi
-	fi
-    else
-	cd /root
-	rm -rf Wiring*
-	export GIT_HTTP_CONNECT_TIMEOUT="10"
-	export GIT_HTTP_USER_AGENT="WPSD SlipStream Task server-side sun81 GPIO binary installer"
-	git clone https://wpsd-swd.w0chp.net/WPSD-SWD/WiringNPi.git
-	cd WiringNPi
-	bash ./build
-	cd .. && rm -rf WiringPi
     fi
     # ensure we reset the dvmega modems:
     if [[ $(/usr/local/sbin/.wpsd-platform-detect) == *"sun8i"* ]] && [ "$castResult" == "true" ]; then
