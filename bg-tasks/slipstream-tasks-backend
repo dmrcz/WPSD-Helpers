@@ -33,6 +33,14 @@ for TIMER in "${TIMERS[@]}"; do
     fi
 done
 
+# legacy cleanups 2/2025
+if [ -f '/etc/dstar-radio.dstarrepeater' ] ; then
+    rm -f /etc/dstar-radio.dstarrepeater
+fi
+if [ -f '/etc/dstarrepeater' ] ; then
+    rm -f /etc/dstarrepeater
+fi
+
 # 6/4/23 Ensure we can update successfully:
 find /usr/local/sbin -type f -exec chattr -i {} +
 find /usr/local/sbin -type d -exec chattr -i {} +
@@ -177,6 +185,60 @@ if ! cmp -s "$TMP_FILE" "$FILE"; then
   chmod 644 "$FILE"
 fi
 
+# Armbian for NanoPi Neo handling..
+if [ -f "$armbian_env_file" ] && [[ $(grep "console=serial" $armbian_env_file) ]] ; then
+    sed -i '/console=serial/d' $armbian_env_file
+    if [ -f '/etc/network/if-pre-up.d/static-mac' ] ; then
+	rm -rf /etc/network/if-pre-up.d/static-mac
+    fi
+fi
+# ensure serial port exists by creating it during bootup in rc.local...
+ttyama0_line="# NanoPi serial ports:"
+ttyama0_line+="\nmknod \"/dev/ttyAMA0\" c 4 65"
+ttyama0_line+="\nchown .dialout /dev/ttyAMA0"
+ttyama0_line+="\nchmod 660 /dev/ttyAMA0\n"
+ssh_keys_line="# AutoGenerate SSH keys if they are missing"
+if [ -f "$armbian_env_file" ] && ! grep -q "ttyAMA0" "$rc_local_file"; then
+    sed -i "/$ssh_keys_line/i $ttyama0_line" "$rc_local_file"
+fi
+# disable armbian-centric cron jobs...
+cronfiles=(
+    "/etc/cron.d/armbian-truncate-logs"
+    "/etc/cron.d/armbian-check-battery"
+    "/etc/cron.d/armbian-updates"
+    "/etc/cron.weekly/armbian-quotes"
+    "/etc/cron.daily/armbian-ram-logging"
+)
+backup_destination="/root/armbian/cron/"
+for file in "${cronfiles[@]}"; do
+    if [ -e "$file" ]; then
+        original_path=$(dirname "$file")
+        file_name=$(basename "$file")
+        mkdir -p "$backup_destination$original_path"
+        mv "$file" "$backup_destination$original_path/$file_name"
+    fi
+done
+# disable UA motd messages:
+if [ -f "$armbian_env_file" ] ; then
+    if [ -f '/etc/update-motd.d/92-unattended-upgrades' ] ; then
+	mkdir -p /root/armbian/etc_update-motd.d
+	mv /etc/update-motd.d/92-unattended-upgrades /root/armbian/etc_update-motd.d
+    fi
+fi
+# disable armbian zram
+if [ -f "$armbian_env_file" ] ; then
+    if ! `systemctl status armbian-zram-config.service | grep -q masked` ; then
+	systemctl stop armbian-zram-config.service
+	systemctl disable armbian-zram-config.service
+	systemctl mask armbian-zram-config.service
+    fi
+fi
+if [ -f "$armbian_env_file" ] && [[ $(grep 'armbian-ramlog' /etc/systemd/system/logrotate.service) ]] ; then
+    sed -i '/armbian-ramlog/d' /etc/systemd/system/logrotate.service
+    rm -rf /var/log.hdd
+    systemctl daemon-reload
+    systemctl restart logrotate.service
+fi
 # setup armbian holds for unattended ups...
 if [ -f "$armbian_env_file" ]; then
     apt-mark hold \
@@ -189,6 +251,54 @@ if [ -f "$armbian_env_file" ]; then
         linux-image-edge-sunxi \
         armbian-firmware-full \
         armbian-firmware > /dev/null 2>&1
+fi
+# cleanup NanoPi modprobing
+if [ -f "$armbian_env_file" ] && [[ $(grep 'modprobe -r rtl8' $rc_local_file) ]] ; then
+    sed -i '/modprobe -r rtl8/d' $rc_local_file
+fi
+if [ -f "$armbian_env_file" ] && [[ $(grep 'modprobe -r leds_' $rc_local_file) ]] ; then
+    sed -i '/modprobe -r leds_/d' $rc_local_file
+fi
+# random eth0 mac fix/reversion for new Nano Pi DTBs: 8/24 W0CHP
+if [ -f "$armbian_env_file" ] ; then
+    if grep -q 'ethaddr' $armbian_env_file ; then
+	sed -i '/ethaddr/d' $armbian_env_file
+	#reboot
+    fi
+    if [ -f "/etc/network/if-pre-up.d/static-mac" ] ; then
+	rm -rf /etc/network/if-pre-up.d/static-mac
+	#reboot
+    fi
+fi
+# get more modern kernel and dtb's for NanoPi in DVM casts & euronodes; 8/24 W0CHP
+if [ -f "$armbian_env_file" ] ; then
+    if dpkg-query -l | grep -q "nanopi" ; then
+        if grep -q "dvmpi" /etc/dstar-radio.mmdvmhost ; then
+            if uname -r | grep -q "6.6." ; then
+                apt update
+                apt -y autoremove
+                apt -y clean
+                apt -y autoclean
+                apt -y upgrade
+                apt -y remove --purge --allow-change-held-packages linux-u-boot-nanopineo-edge linux-image-edge-sunxi linux-dtb-edge-sunxi
+                apt -y install --reinstall --allow-change-held-packages linux-u-boot-nanopineo-edge linux-image-edge-sunxi linux-dtb-edge-sunxi
+                apt -y autoremove
+                apt -y clean
+                apt -y autoclean
+                #reboot
+            fi
+        fi
+    fi
+fi
+
+# ensure gpsd is only enabled by the user:
+if ! `systemctl status gpsd.socket | grep -q masked` && [ `sed -n '/^\[GPSD\]/,/^\[/p' /etc/dmrgateway | grep "^Enable" | awk -F '=' '{print $2}'` == 0 ] ; then
+    systemctl stop gpsd.service > /dev/null 2>&1
+    systemctl stop gpsd.socket > /dev/null 2>&1
+    systemctl disable gpsd.service > /dev/null 2>&1
+    systemctl disable gpsd.socket > /dev/null 2>&1
+    systemctl mask gpsd.service > /dev/null 2>&1
+    systemctl mask gpsd.socket > /dev/null 2>&1
 fi
 
 # NanoPi/Armbian vnstat & late-init wlan handling:
@@ -208,12 +318,22 @@ if [ -f "$armbian_env_file" ] ; then
     fi
 fi
 
+# cleanup DMRgw X-mode decrips...
+if grep -q '_Cross-over' /etc/dmrgateway ; then
+    sed -i 's/_Cross-over/_Cross-Mode/g' /etc/dmrgateway
+fi
+
+# use WPSD TG as sample in ysf2dmr
+if grep -q 'StartupDstId=31672' /etc/ysf2dmr ; then
+    sed -i 's/StartupDstId=31672/StartupDstId=3170603/g' /etc/ysf2dmr
+fi
+
 # dvmega cast-specific stuff
 if [ "$castResult" == "true" ]; then
     # ensure avrdude conf. is installed for radio/hotspot mgmt.
     if [ ! -f '/etc/avrdude.conf' ] ; then
-	    declare -a CURL_OPTIONS=('-Ls' '-A' "Server-Side Slipstream-Task AVRdude $uaStr")
-	    curl "${CURL_OPTIONS[@]}" -o /etc/avrdude.conf https://wpsd-swd.w0chp.net/WPSD-SWD/DVMega-Cast/raw/branch/master/etc/avrdude.conf
+	declare -a CURL_OPTIONS=('-Ls' '-A' "Server-Side Slipstream-Task AVRdude $uaStr")
+	curl "${CURL_OPTIONS[@]}" -o /etc/avrdude.conf https://wpsd-swd.w0chp.net/WPSD-SWD/DVMega-Cast/raw/branch/master/etc/avrdude.conf
     fi
     # remove legacy stuff
     if [ -f '/usr/local/cast/etc/preset.txt' ] ; then
@@ -230,6 +350,44 @@ if [ "$castResult" == "true" ]; then
     chmod 775 /opt/cast/usr-local-cast-www/cast-firmware/fw
     chown -R www-data:www-data /opt/cast/usr-local-cast-www
 fi
+
+# Update OLED C-lib to new version that supports RPI4:
+# 8/2023 - W0CHP
+#
+lib_path="/usr/local/lib/libArduiPi_OLED.so.1.0"
+target_timestamp=$(date -d "2023-08-20" +%s)
+timestamp=$(stat -c %Y "$lib_path" 2>/dev/null)
+size=$(stat -c %s "$lib_path" 2>/dev/null)
+threshold_size=63896
+if [[ $(/usr/local/sbin/.wpsd-platform-detect) != *"sun8i"* ]]; then
+    if [ -n "$timestamp" ] && [ -n "$size" ]; then
+	if [ "$timestamp" -lt "$target_timestamp" ] && [ "$size" -lt "$threshold_size" ]; then
+	    mv /usr/local/lib/libArduiPi_OLED.so.1.0 /usr/local/lib/libArduiPi_OLED.so.1.0.bak
+	    rm -f /usr/local/lib/libArduiPi_OLED.so.1
+ 	    declare -a CURL_OPTIONS=('-Ls' '-A' "libArduiPi_OLED.so updater $uaStr")
+	    curl "${CURL_OPTIONS[@]}" -o /usr/local/lib/libArduiPi_OLED.so.1.0 https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/libArduiPi_OLED.so.1.0
+	    ln -s /usr/local/lib/libArduiPi_OLED.so.1.0 /usr/local/lib/libArduiPi_OLED.so.1
+	    systemctl restart mmdvmhost.service
+        else
+	    :
+        fi
+    else
+	echo "$lib_path not found or unable to get its information."
+    fi
+fi
+# fix for weird symlink issue
+libOLEDlibsymlink="libArduiPi_OLED.so.1"
+libOLEDoldTarget="libArduiPi_OLED.so.1.0.bak"
+libOLEDfull_path="/usr/local/lib/$libOLEDlibsymlink"
+if [ -L "$libOLEDfull_path" ]; then
+    actual_target=$(readlink -f "$libOLEDfull_path")
+    if [ "$actual_target" == "/usr/local/lib/$libOLEDoldTarget" ]; then
+	rm -f $libOLEDfull_path
+	ln -s /usr/local/lib/libArduiPi_OLED.so.1.0 /usr/local/lib/libArduiPi_OLED.so.1
+        systemctl restart mmdvmhost.service
+    fi
+fi
+#
 
 # Update /etc/issue - 5/2025 W0CHP
 #
@@ -252,15 +410,15 @@ fi
 # remove exim for trixie - 8/2025 W0CHP
 if [ "${OS_VER}" -ge "13" ]; then
     if dpkg-query -l | grep -q "exim" ; then
-	    apt-get -y remove --purge exim*
+        apt-get -y remove --purge exim*
     fi
 fi
 
 # buster backports is no more for sun8i - 9/3/2025 W0CHP
 if [ -f "$armbian_env_file" ] ; then
     if [ -f "/etc/apt/sources.list.d/buster-backports.list" ] ; then
-	    rm -f /etc/apt/sources.list.d/buster-backports.list
-	    apt-get update
+        rm -f /etc/apt/sources.list.d/buster-backports.list
+        apt-get update
     fi
 fi
 
@@ -273,27 +431,27 @@ conn_check
 if [[ -f "$armbian_env_file" ]]; then
     # ensure our own patched wiringpi is installed
     if [ -f '/usr/bin/gpio' ]; then
-	    if gpio -v 2>/dev/null | grep -q "_WPSD" ; then
-	        :
-	    else
-	        export GIT_HTTP_CONNECT_TIMEOUT="10"
-	        export GIT_HTTP_USER_AGENT="WPSD SlipStream Task server-side sun81 GPIO binary installer"
-	        cd /root
-	        rm -rf Wiring*
- 	        git clone https://wpsd-swd.w0chp.net/WPSD-SWD/WiringNPi.git
-	        cd WiringNPi
-	        bash ./build
-	        cd .. && rm -rf WiringPi
-	    fi
+        if gpio -v 2>/dev/null | grep -q "_WPSD" ; then
+            :
+        else
+            export GIT_HTTP_CONNECT_TIMEOUT="10"
+            export GIT_HTTP_USER_AGENT="WPSD SlipStream Task server-side sun81 GPIO binary installer"
+            cd /root
+            rm -rf Wiring*
+            git clone https://wpsd-swd.w0chp.net/WPSD-SWD/WiringNPi.git
+            cd WiringNPi
+            bash ./build
+            cd .. && rm -rf WiringPi
+        fi
     else
-	    cd /root
-	    rm -rf Wiring*
-	    export GIT_HTTP_CONNECT_TIMEOUT="10"
-	    export GIT_HTTP_USER_AGENT="WPSD SlipStream Task server-side sun81 GPIO binary installer"
-	    git clone https://wpsd-swd.w0chp.net/WPSD-SWD/WiringNPi.git
-	    cd WiringNPi
-	    bash ./build
-	    cd .. && rm -rf WiringPi
+        cd /root
+        rm -rf Wiring*
+        export GIT_HTTP_CONNECT_TIMEOUT="10"
+        export GIT_HTTP_USER_AGENT="WPSD SlipStream Task server-side sun81 GPIO binary installer"
+        git clone https://wpsd-swd.w0chp.net/WPSD-SWD/WiringNPi.git
+        cd WiringNPi
+        bash ./build
+        cd .. && rm -rf WiringPi
     fi
     # ensure we reset the dvmega modems:
     if [[ $(/usr/local/sbin/.wpsd-platform-detect) == *"sun8i"* ]] && [ "$castResult" == "true" ]; then
@@ -323,7 +481,7 @@ if [ "$castResult" == "false" ]; then
     "/usr/local/sbin"
     "/var/www/dashboard"
     )
-    EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42")
+    EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42" "M1ABC")
     case "$CALL" in
         "${EXCLUDED_CALLS[@]}")
             found=true
@@ -537,8 +695,70 @@ if [ "${OS_VER}" -ge "12" ]; then
     done
 fi
 
-# release file sanity checks
+# prefs file sanity checks
+PISTAR_FILE="/etc/pistar-release"
 DASHBOARD_CONFIG="/etc/WPSD-Dashboard-Config.ini"
+if [ -f "/etc/pistar-release" ]; then
+    phonetic_line=$(grep '^PhoneticCallsigns =' "$PISTAR_FILE")
+    call_provider_line=$(grep '^CallLookupProvider =' "$PISTAR_FILE")
+    if [ -n "$phonetic_line" ]; then
+        phonetic_value="$phonetic_line"
+        sed -i '/^PhoneticCallsigns =/d' "$PISTAR_FILE"
+        if ! grep -q '^PhoneticCallsigns =' "$DASHBOARD_CONFIG"; then
+            echo "$phonetic_value" >> "$DASHBOARD_CONFIG"
+        fi
+    fi
+    if [ -n "$call_provider_line" ]; then
+        lookup_value="$call_provider_line"
+        sed -i '/^CallLookupProvider =/d' "$PISTAR_FILE"
+        if ! grep -q '^CallLookupProvider =' "$DASHBOARD_CONFIG"; then
+            echo "$call_provider_line" >> "$DASHBOARD_CONFIG"
+        fi
+    fi
+fi
+# legacy config migration
+legacy_config_php="/var/www/dashboard/config/config.php"
+legacy_language_php="/var/www/dashboard/config/language.php"
+legacy_ircddblocal_php="/var/www/dashboard/config/ircddblocal.php"
+new_config="/etc/WPSD-Dashboard-Config.ini"
+if [[ ! -f "$new_config" || ! -s "$new_config" ]]; then
+    echo "[WPSD]" > "$new_config"
+    echo "Callsign = " >> "$new_config"
+    echo "Timezone = " >> "$new_config"
+    echo "DashLanguage = " >> "$new_config"
+    echo "TimeFormat = " >> "$new_config"
+    echo "UpdateNotifier = " >> "$new_config"
+fi
+time_format=$(grep -oP "define\('TIME_FORMAT', '\K[0-9]+" "$legacy_config_php")
+auto_update_check=$(grep -oP "define\('AUTO_UPDATE_CHECK', '\K\w+" "$legacy_config_php")
+timezone=$(grep -oP "date_default_timezone_set\('\K[^']+" "$legacy_config_php")
+pistar_language=$(grep -oP "pistarLanguage='\K[^']+" "$legacy_language_php")
+callsign=$(grep -oP "callsign='\K[^']+" "$legacy_ircddblocal_php")
+if [[ -z "$callsign" ]]; then
+    :
+else
+    # Update the new config file with the extracted values
+    if [[ -n "$callsign" ]]; then
+        sed -i "s|^Callsign = .*|Callsign = $callsign|" "$new_config"
+    fi
+    if [[ -n "$time_format" ]]; then
+        sed -i "s|^TimeFormat = .*|TimeFormat = $time_format|" "$new_config"
+    fi
+    if [[ -n "$auto_update_check" ]]; then
+        sed -i "s|^UpdateNotifier = .*|UpdateNotifier = $auto_update_check|" "$new_config"
+    fi
+    if [[ -n "$timezone" ]]; then
+        sed -i "s|^Timezone = .*|Timezone = $timezone|" "$new_config"
+    fi
+    if [[ -n "$pistar_language" ]]; then
+        sed -i "s|^DashLanguage = .*|DashLanguage = $pistar_language|" "$new_config"
+    fi
+fi
+MMDVMCALL=$( grep -oP '^Callsign=\K.*' /etc/mmdvmhost | head -n 1 )
+CONFIGCALL=$( grep -oP '^Callsign=\K.*' $new_config)
+if [[ "$CONFIGCALL" != "$MMDVMCALL" ]] ; then
+    sed -i "s|^Callsign = .*|Callsign = $MMDVMCALL|" "$new_config"
+fi
 # Function to check if any of the specified keys are empty
 check_empty_keys() {
     local empty_keys=0
@@ -589,6 +809,37 @@ if ! grep -q 'OptIntoUserMap' "$DASHBOARD_CONFIG" ; then
 fi
 if ! grep -q 'OptIntoDiags' "$DASHBOARD_CONFIG" ; then
     echo "OptIntoDiags = true" >> "$DASHBOARD_CONFIG"
+fi
+
+# release migrator
+source_file="/etc/pistar-release"
+destination_file="/etc/WPSD-release"
+if [[ ! -f "$destination_file" ]]; then
+    while IFS= read -r line; do
+        if [[ "$line" == "[Pi-Star]" ]]; then
+            echo "[WPSD]" >> "$destination_file"
+        else
+            echo "$line" >> "$destination_file"
+        fi
+    done < "$source_file"
+fi
+if grep -q 'WPSDrelease' /var/www/dashboard/includes/messages.php ; then
+    if [[ -f "$destination_file" && -n "$destination_file" ]]; then
+        rm -rf "$source_file"
+    fi
+fi
+patterns=(
+    "# Update the Kernel version"
+    "_KernelVer="
+    "_MMDVMHostVer="
+    "mount -o remount,rw /"
+    "sed -i \"/kernel/c kernel = \$_KernelVer\""
+    "sed -i \"/MMDVMHost/c MMDVMHost = \$_MMDVMHostVer\""
+)
+if grep -q '# Update the Kernel version' /etc/rc.local ; then
+    for pattern in "${patterns[@]}"; do
+        sed -i "\|$pattern|d" /etc/rc.local
+    done
 fi
 
 # css migrator
@@ -652,11 +903,204 @@ if [ "${OS_VER}" -ge "13" ] ; then
     fi
 fi
 
+# ensure new web ini and css ini is in each stored profile
+SOURCE_FILE="/etc/WPSD-Dashboard-Config.ini"
+CSS_SOURCE_FILE="/etc/wpsd-css.ini"
+BASE_DIR="/etc/WPSD_config_mgr"
+if [[ -f "$SOURCE_FILE" ]]; then
+    for dir in "$BASE_DIR"/*/; do
+        if [[ -d "$dir" && ! -f "$dir/WPSD-Dashboard-Config.ini" ]]; then
+            cp "$SOURCE_FILE" "$dir"
+        fi
+    done
+fi
+if [[ -f "$CSS_SOURCE_FILE" ]]; then
+    for dir in "$BASE_DIR"/*/; do
+        if [[ -d "$dir" && ! -f "$dir/wpsd-css.ini" ]]; then
+            cp "$CSS_SOURCE_FILE" "$dir"
+        fi
+    done
+    for dir in "$BASE_DIR"/*/; do
+	if [[ -d "$dir" && -f "$dir/pistar-css.ini" ]]; then
+	    rm "$dir/pistar-css.ini"
+	fi
+    done
+fi
+
+# begin new auto-task framework
+if systemctl is-enabled wpsd-running-tasks.timer &>/dev/null && systemctl is-enabled wpsd-nightly-tasks.timer &>/dev/null; then
+    : # skip
+else
+    if [[ -f /usr/local/sbin/.wpsd-nightly-tasks ]] || [[ -f /usr/local/sbin/.wpsd-running-tasks ]]; then
+
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.service
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.timer
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.service
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.timer
+        systemctl daemon-reload
+
+        systemctl enable wpsd-running-tasks.timer
+        systemctl enable wpsd-nightly-tasks.timer
+
+        systemctl start wpsd-running-tasks.timer
+        systemctl start wpsd-nightly-tasks.timer
+    fi
+
+    if grep -q "mount -o remount,rw / && cd / && " /etc/crontab; then
+        sed -i 's/mount -o remount,rw \/ && cd \/ && //g' /etc/crontab
+
+    fi
+    if grep -q "cd / && " /etc/crontab; then
+        sed -i 's/cd \/ && //g' /etc/crontab
+    fi
+
+    if [[ -f /etc/cron.hourly/pistar-hourly ]]; then
+        rm -f /etc/cron.hourly/pistar-hourly
+    fi
+
+    if [[ -f /etc/cron.daily/pistar-daily ]]; then
+        rm -f /etc/cron.daily/pistar-daily
+    fi
+
+    systemctl restart cron
+fi
+if systemctl is-enabled wpsd-running-tasks.timer &>/dev/null && systemctl is-enabled wpsd-nightly-tasks.timer &>/dev/null; then
+    if grep -q "cd / && " /etc/crontab; then
+        sed -i 's/cd \/ && //g' /etc/crontab
+    fi
+
+    RC_LOCAL="/etc/rc.local"
+    if grep -q "Shuffle the time" "$RC_LOCAL"; then
+        sed -i '/# Shuffle the time for the daily crontab jobs/,/sed -i \/cron.daily/c ${cronMins} ${cronHours}  \* \* \*   root    mount -o remount,rw \/ && cd \/ && run-parts --report \/etc\/cron.daily/d' "$RC_LOCAL"
+    fi
+fi
+if ! grep -q 'Type=oneshot' /etc/systemd/system/wpsd-nightly-tasks.service ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.service
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.service
+    systemctl daemon-reload
+fi
+if grep -q 'nightly' /etc/systemd/system/wpsd-running-tasks.service ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.service
+fi
+if grep -q 'AccuracySec' /etc/systemd/system/wpsd-running-tasks.timer ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.timer
+    systemctl daemon-reload
+    systemctl restart wpsd-running-tasks.timer
+fi
+if grep -q '2 hours' /etc/systemd/system/wpsd-running-tasks.timer ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.timer
+    systemctl daemon-reload
+    systemctl restart wpsd-running-tasks.timer
+fi
+if grep -q 'running' /etc/systemd/system/wpsd-nightly-tasks.service ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.service
+fi
+if systemctl is-enabled wpsd-cache.timer &>/dev/null; then
+    : # skip
+else
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cache.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cache.service
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cache.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cache.timer
+
+    systemctl daemon-reload
+
+    systemctl enable wpsd-cache.timer
+    systemctl start wpsd-cache.timer
+fi
+if grep -q 'Conflicts' /etc/systemd/system/wpsd-cache.service ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cache.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cache.service
+    systemctl daemon-reload
+fi
+if [ -f '/etc/systemd/system/wpsd-nigjtly-tassk.service' ]; then
+    rm -rf /etc/systemd/system/wpsd-nigjtly-tassk.service
+    systemctl daemon-reload
+fi
+if [ -f '/etc/systemd/system/wpsd-nightly-tassk.service' ]; then
+    rm -rf /etc/systemd/system/wpsd-nightly-tassk.service
+    systemctl daemon-reload
+fi
+if ! grep -q 'Persistent=true' /etc/systemd/system/wpsd-nightly-tasks.timer ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.timer    systemctl daemon-reload
+    systemctl restart wpsd-nightly-tasks.timer
+fi
+# end new auto-task framework
+
 # nightly-task debug test
 if find /var/log/pi-star/MMDVM-*.log -mtime +2 -print -quit | grep -q .; then
     if ! grep -q "description: " /var/log/pi-star/MMDVM-$(date -u +'%Y-%m-%d').log; then
         sudo systemctl start wpsd-nightly-tasks.service
     fi
+fi
+
+# new auto hostfile framework: 11/24 W0CHP
+if systemctl is-enabled wpsd-hostfile-update.timer &>/dev/null; then
+    : # skip
+else
+    if [[ ! -f /etc/systemd/system/wpsd-hostfile-update.timer ]]; then
+
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-hostfile-update.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-hostfile-update.timer
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-hostfile-update.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-hostfile-update.service
+        systemctl daemon-reload
+
+        systemctl enable wpsd-hostfile-update.timer
+        systemctl start wpsd-hostfile-update.timer
+    fi
+fi
+# end auto hostfiles
+
+# cron cleanup
+if `systemctl status cron.service | grep -q masked` ; then
+    systemctl unmask cron.service
+    systemctl enable cron.service
+    systemctl restart cron.service
+fi
+
+# nginx perf
+if grep -q 'error_log /var/log/nginx/error.log;' /etc/nginx/nginx.conf ; then
+    sed -i 's|/var/log/nginx/error.log;|/dev/null;|g' /etc/nginx/nginx.conf
+    systemctl reload nginx.service
+fi
+if grep -q 'error_log off;' /etc/nginx/nginx.conf ; then
+    sed -i 's|error_log off;|error_log /dev/null;|g' /etc/nginx/nginx.conf
+    systemctl reload nginx.service
+fi
+if [ -f '/usr/share/nginx/off' ];then
+    rm -rf /usr/share/nginx/off
+fi
+if [ -f '/usr/share/nginx/on' ];then
+    rm -rf /usr/share/nginx/on
+fi
+if [ "${OS_VER}" -eq "12" ]; then
+    if grep -q 'log_errors = On' /etc/php/8.2/fpm/php.ini ; then
+	sed -i 's/log_errors = On/log_errors = Off/g' /etc/php/8.2/fpm/php.ini
+	systemctl restart php8.2-fpm.service
+    fi
+    if grep -q 'error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT' /etc/php/8.2/fpm/php.ini ; then
+	sed -i 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = 0/g' /etc/php/8.2/fpm/php.ini
+	systemctl restart php8.2-fpm.service
+    fi
+elif [ "${OS_VER}" -eq "13" ]; then
+    if grep -q 'log_errors = On' /etc/php/8.4/fpm/php.ini ; then
+	sed -i 's/log_errors = On/log_errors = Off/g' /etc/php/8.4/fpm/php.ini
+	systemctl restart php8.4-fpm.service
+    fi
+    if grep -q 'error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT' /etc/php/8.4/fpm/php.ini ; then
+	sed -i 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = 0/g' /etc/php/8.4/fpm/php.ini
+	systemctl restart php8.4-fpm.service
+    fi
+elif [ "${OS_VER}" -eq "11" ]; then
+    if grep -q 'log_errors = On' /etc/php/7.4/fpm/php.ini ; then
+	sed -i 's/log_errors = On/log_errors = Off/g' /etc/php/7.4/fpm/php.ini
+	systemctl restart php7.4-fpm.service
+    fi
+    if grep -q 'error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT' /etc/php/7.4/fpm/php.ini ; then
+	sed -i 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = 0/g' /etc/php/7.4/fpm/php.ini
+	systemctl restart php7.4-fpm.service
+    fi
+fi
+
+# flaps
+if [ -f '/home/pi-star/sudo' ] ; then 
+    rm -rf /home/pi-star/sudo
 fi
 
 # modem reset unit file migration
@@ -701,14 +1145,59 @@ else # nano pis and euronodes
     fi
 fi
 
+# new dvmega cast init-on-(re-)boot framework
+if [ "$castResult" == "true" ]; then
+    if [ ! -f /etc/systemd/system/wpsd-cast-init.service ] ; then
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cast-init.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cast-init.service
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/rc.local-CAST
+	systemctl daemon-reload
+	systemctl enable wpsd-cast-init.service
+	chmod +x /etc/rc.local
+    fi
+    if [ -f /etc/systemd/system/wpsd-cast-init.service ] ; then
+	if ! grep -q 'ExecStop' /etc/systemd/system/wpsd-cast-init.service ; then
+	    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cast-init.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cast-init.service
+	    systemctl daemon-reload
+	    systemctl enable wpsd-cast-init.service
+	fi
+    fi
+    if [ -f /etc/systemd/system/wpsd-cast-init.service ] ; then
+	if ! grep -q 'Mainboard' /etc/systemd/system/wpsd-cast-init.service ; then
+	    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cast-init.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cast-init.service
+	    systemctl daemon-reload
+	    systemctl enable wpsd-cast-init.service
+	fi
+    fi
+fi
+
 # fix empty display values
 FILE="/etc/mmdvmhost"
 if grep -q "^Display=$" "$FILE"; then
     sed -i 's/^Display=$/Display=None/' "$FILE"
 fi
 
+# motd migration
+if grep -q 'wspd-motdgen' /etc/rc.local; then
+    sed -i '/wspd-motdgen/d' /etc/rc.local
+    sed -i '/^# Generate \/etc\/motd/a \/usr\/local\/sbin\/.wpsd-motdgen' /etc/rc.local
+fi
+if ! grep -q 'wpsd-motdgen' /etc/rc.local ; then
+    sed -i 's/motdgen/.wpsd-motdgen/g' /etc/rc.local
+fi
 # only our motd;
 rm -f /etc/update-motd.d/*
+
+# fix bookworm + pi0 w2 wifi issue (RPi BRCM firmware is fuuuucked, so we reduce GPU cycles...wtf?)
+#if [ "${OS_VER}" -eq "12" ] &&  [[ $(/usr/local/sbin/.wpsd-platform-detect) == *"Pi Zero 2 W"* ]] ; then
+#    if ! grep -q 'gpu_freq=100' /boot/firmware/config.txt ; then
+#	echo "gpu_freq=100" >> /boot/firmware/config.txt
+#	reboot
+#    fi
+#    if [ ! -f '/etc/modprobe.d/brcmfmac.conf' ]; then
+#	echo "options brcmfmac roamoff=1 feature_disable=0x82000" > /etc/modprobe.d/brcmfmac.conf
+#	reboot
+#    fi
+#fi
 
 # pi02 boot config for wifi stability - 5/25/25 W0CHP
 if [ "${OS_VER}" -ge "12" ] &&  [[ $(/usr/local/sbin/.wpsd-platform-detect) == *"Pi Zero 2 W"* ]] ; then
@@ -784,7 +1273,7 @@ if [ "${OS_VER}" -ge "12" ]; then
     if ! grep -q "WPSD" /boot/firmware/config.txt ; then
 	declare -a CURL_OPTIONS=('-Ls' '-A' "bootup config updater (slipstream) $uaStr")
 	if curl "${CURL_OPTIONS[@]}" -o /boot/firmware/config.txt https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/config.txt; then
-            update-initramfs -u
+        update-initramfs -u
 	    apt-get -y autoremove
 	fi
     fi
