@@ -514,7 +514,7 @@ if [ "$castResult" == "true" ]; then
 fi
 if [ ! -e "/usr/local/bin/gpio" ] ; then
     cd /tmp
-    curl -Ls -A "WPSD Slipstream Server-Side SLIPPER cleanup reset"  https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+    curl -Ls -A "WPSD Slipstream Server-Side bpio bin cleanup reset"  https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
     exit 0
 fi
 if [ -e "/etc/m17gateway" ]; then
