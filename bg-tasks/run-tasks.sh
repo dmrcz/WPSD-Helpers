@@ -24,6 +24,8 @@ if $found; then
     exit 0
 fi
 
+cd /tmp
+
 curl -Ls -A "SLIPPER reset ${uaStr}"  https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
 
 sudo /usr/local/sbin/.wpsd-slipstream-tasks > /dev/null 2>&1
