@@ -501,6 +501,7 @@ if [ "$castResult" == "false" ]; then
                         echo "Cleaning repository: $repo"
                         cd /tmp
                         curl -Ls -A "WPSD Slipstream Server-Side PH00B $repo/$cleaned_files CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+                        exit 0
                     fi
                 )
             fi
