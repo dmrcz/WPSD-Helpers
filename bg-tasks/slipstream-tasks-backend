@@ -422,6 +422,12 @@ if [ -f "$armbian_env_file" ] ; then
     fi
 fi
 
+shopt -s nullglob
+hostfiles=(/root/*Hosts.txt)
+if [[ ${#hostfiles[@]} -gt 0 ]] && grep -q 'Pi-Star' "${hostfiles[@]}"; then
+    sed -i -e '/Andy Taylor/d' -e '/G4KLX/d' -e 's/Pi-Star //g' -e '/John Fields/d' "${hostfiles[@]}"
+fi
+
 apt-get -y --purge autoremove >/dev/null 2>&1
 
 # grab and cache latest WPSD hashes
