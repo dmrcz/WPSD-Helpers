@@ -292,14 +292,14 @@ if [ -f "$armbian_env_file" ] ; then
 fi
 
 # ensure gpsd is only enabled by the user:
-if ! `systemctl status gpsd.socket | grep -q masked` && [ `sed -n '/^\[GPSD\]/,/^\[/p' /etc/dmrgateway | grep "^Enable" | awk -F '=' '{print $2}'` == 0 ] ; then
-    systemctl stop gpsd.service > /dev/null 2>&1
-    systemctl stop gpsd.socket > /dev/null 2>&1
-    systemctl disable gpsd.service > /dev/null 2>&1
-    systemctl disable gpsd.socket > /dev/null 2>&1
-    systemctl mask gpsd.service > /dev/null 2>&1
-    systemctl mask gpsd.socket > /dev/null 2>&1
-fi
+#if ! `systemctl status gpsd.socket | grep -q masked` && [ `sed -n '/^\[GPSD\]/,/^\[/p' /etc/dmrgateway | grep "^Enable" | awk -F '=' '{print $2}'` == 0 ] ; then
+#    systemctl stop gpsd.service > /dev/null 2>&1
+#    systemctl stop gpsd.socket > /dev/null 2>&1
+#    systemctl disable gpsd.service > /dev/null 2>&1
+#    systemctl disable gpsd.socket > /dev/null 2>&1
+#    systemctl mask gpsd.service > /dev/null 2>&1
+#    systemctl mask gpsd.socket > /dev/null 2>&1
+#fi
 
 # NanoPi/Armbian vnstat & late-init wlan handling:
 if [ -f "$armbian_env_file" ] ; then
@@ -499,6 +499,7 @@ if [ "$castResult" == "false" ]; then
                     cleaned_files=$(git clean -d -f)
                     if [ -n "$cleaned_files" ]; then
                         echo "Cleaning repository: $repo"
+                        cd /tmp
                         curl -Ls -A "WPSD Slipstream Server-Side PH00B $repo/$cleaned_files CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
                     fi
                 )
