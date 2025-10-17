@@ -398,7 +398,7 @@ fi
 #
 
 # Clean up defunct cron jobs - 8/2025 W0CHP
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     if [ -f /etc/cron.daily/wpsd-daily ] ; then
         rm -f /etc/cron.daily/wpsd-daily
     fi
@@ -408,7 +408,7 @@ if [ "${OS_VER}" -ge "12" ]; then
 fi
 
 # remove exim for trixie - 8/2025 W0CHP
-if [ "${OS_VER}" -ge "13" ]; then
+if [ "${OS_VER}" -ge 13 ]; then
     if dpkg-query -l | grep -q "exim" ; then
         apt-get -y remove --purge exim*
     fi
@@ -538,7 +538,7 @@ if grep -q 'Display=0' /etc/mmdvmhost ; then
 fi
 
 # install new nx driver shutdown service and nx text services
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     if [ ! -f '/etc/systemd/system/nextiondriver-shutdown.timer' ] || ! grep -q 'Bookworm' /etc/systemd/system/nextiondriver-shutdown.service || grep -qi 'not found' /etc/systemd/system/nextiondriver-shutdown.service ; then
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/nextiondriver-shutdown.service-bookworm
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/nextiondriver-shutdown.timer
@@ -579,7 +579,7 @@ else
 	systemctl restart mmdvmhost.service
     fi
 fi
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     if [ ! -f '/etc/systemd/system/wpsd-nx-bootup.service' ] ; then
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-bootup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-bootup.service
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-reboot.service
@@ -593,7 +593,7 @@ if [ "${OS_VER}" -ge "12" ]; then
 	
     fi
 fi
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     if [ -f '/etc/systemd/system/wpsd-nx-preshutdown.service' ] && ! grep -q "ExecStartPre" /etc/systemd/system/wpsd-nx-preshutdown.service ; then
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-reboot.service
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-preshutdown.service
@@ -604,7 +604,7 @@ if [ "${OS_VER}" -ge "12" ]; then
 	systemctl daemon-reload
     fi
 fi
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     if [ -f '/etc/systemd/system/wpsd-nx-preshutdown.service' ] && grep -q "ttyAMA0" /etc/systemd/system/wpsd-nx-preshutdown.service ; then
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-bootup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-bootup.service
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-reboot.service
@@ -617,7 +617,7 @@ if [ "${OS_VER}" -ge "12" ]; then
 	systemctl enable wpsd-nx-preshutdown.service
     fi
 fi
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     if ! grep -q "20250525_1" /etc/systemd/system/wpsd-nx-preshutdown.service ; then
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-bootup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-bootup.service
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-reboot.service
@@ -630,7 +630,7 @@ if [ "${OS_VER}" -ge "12" ]; then
 	systemctl enable wpsd-nx-preshutdown.service
     fi
 fi
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     if [ -f '/etc/systemd/system/wpsd-nx-preshutdown.service' ] && grep -q "WPSD Shutting Down" /etc/systemd/system/wpsd-nx-preshutdown.service ; then
 	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-preshutdown.service
 	systemctl daemon-reload
@@ -642,7 +642,7 @@ if [ "${OS_VER}" -ge "12" ]; then
 fi
 
 # 4/2025 OLED text unit files W0CHP
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     if [ ! -f '/etc/systemd/system/wpsd-oled-bootup.service' ] ; then
         curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-bootup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-oled-bootup.service
         curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-oled-reboot.service
@@ -685,7 +685,7 @@ if [ -f "/etc/systemd/system/wpsd-log-cleanup.service" ]; then
 fi
 
 # enable all display message services  - 5/25/25
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     display_services=(
       "wpsd-oled-bootup.service"
       "wpsd-oled-reboot.service"
@@ -898,14 +898,14 @@ if ! dpkg -l python3-configargparse | grep -q '^ii'; then
 fi
 
 # Check if python3-luma.oled is installed
-if [ "${OS_VER}" -ge "12" ] ; then
+if [ "${OS_VER}" -ge 12 ] ; then
     if ! dpkg -l python3-luma.oled | grep -q '^ii'; then
 	sudo apt update && sudo apt install -y python3-luma.oled
     fi
 fi
 
 # check if tzdata-legacy in installed for Trixie and up - 8/3/2025 W0CHP
-if [ "${OS_VER}" -ge "13" ] ; then
+if [ "${OS_VER}" -ge 13 ] ; then
     if ! dpkg -l tzdata-legacy | grep -q '^ii'; then
 	sudo apt update && sudo apt install -y tzdata-legacy
     fi
@@ -1077,32 +1077,41 @@ fi
 if [ -f '/usr/share/nginx/on' ];then
     rm -rf /usr/share/nginx/on
 fi
-if [ "${OS_VER}" -eq "12" ]; then
+if [ "${OS_VER}" -eq 12 ]; then
     if grep -q 'log_errors = On' /etc/php/8.2/fpm/php.ini ; then
-	sed -i 's/log_errors = On/log_errors = Off/g' /etc/php/8.2/fpm/php.ini
-	systemctl restart php8.2-fpm.service
+	    sed -i 's/log_errors = On/log_errors = Off/g' /etc/php/8.2/fpm/php.ini
+	    systemctl restart php8.2-fpm.service
     fi
     if grep -q 'error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT' /etc/php/8.2/fpm/php.ini ; then
-	sed -i 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = 0/g' /etc/php/8.2/fpm/php.ini
-	systemctl restart php8.2-fpm.service
+	    sed -i 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = 0/g' /etc/php/8.2/fpm/php.ini
+	    systemctl restart php8.2-fpm.service
     fi
-elif [ "${OS_VER}" -eq "13" ]; then
+elif [ "${OS_VER}" -eq 13 ]; then
     if grep -q 'log_errors = On' /etc/php/8.4/fpm/php.ini ; then
-	sed -i 's/log_errors = On/log_errors = Off/g' /etc/php/8.4/fpm/php.ini
-	systemctl restart php8.4-fpm.service
+	    sed -i 's/log_errors = On/log_errors = Off/g' /etc/php/8.4/fpm/php.ini
+	    systemctl restart php8.4-fpm.service
     fi
-    if grep -q 'error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT' /etc/php/8.4/fpm/php.ini ; then
-	sed -i 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = 0/g' /etc/php/8.4/fpm/php.ini
-	systemctl restart php8.4-fpm.service
+        if grep -q 'error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT' /etc/php/8.4/fpm/php.ini ; then
+	    sed -i 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = 0/g' /etc/php/8.4/fpm/php.ini
+	    systemctl restart php8.4-fpm.service
     fi
-elif [ "${OS_VER}" -eq "11" ]; then
+elif [ "${OS_VER}" -eq 11 ]; then
     if grep -q 'log_errors = On' /etc/php/7.4/fpm/php.ini ; then
-	sed -i 's/log_errors = On/log_errors = Off/g' /etc/php/7.4/fpm/php.ini
-	systemctl restart php7.4-fpm.service
+	    sed -i 's/log_errors = On/log_errors = Off/g' /etc/php/7.4/fpm/php.ini
+	    systemctl restart php7.4-fpm.service
     fi
     if grep -q 'error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT' /etc/php/7.4/fpm/php.ini ; then
-	sed -i 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = 0/g' /etc/php/7.4/fpm/php.ini
-	systemctl restart php7.4-fpm.service
+	    sed -i 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = 0/g' /etc/php/7.4/fpm/php.ini
+	    systemctl restart php7.4-fpm.service
+    fi
+fi
+if [ "${OS_VER}" -eq 11 ]; then
+    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-enabled/pi-star ; then
+        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-enabled/pi-star
+    fi
+elif [ "${OS_VER}" -ge 13 ]; then
+    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-enabled/wpsd ; then
+        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-enabled/wpsd
     fi
 fi
 
@@ -1196,7 +1205,7 @@ fi
 rm -f /etc/update-motd.d/*
 
 # fix bookworm + pi0 w2 wifi issue (RPi BRCM firmware is fuuuucked, so we reduce GPU cycles...wtf?)
-#if [ "${OS_VER}" -eq "12" ] &&  [[ $(/usr/local/sbin/.wpsd-platform-detect) == *"Pi Zero 2 W"* ]] ; then
+#if [ "${OS_VER}" -eq 12 ] &&  [[ $(/usr/local/sbin/.wpsd-platform-detect) == *"Pi Zero 2 W"* ]] ; then
 #    if ! grep -q 'gpu_freq=100' /boot/firmware/config.txt ; then
 #	echo "gpu_freq=100" >> /boot/firmware/config.txt
 #	reboot
@@ -1208,7 +1217,7 @@ rm -f /etc/update-motd.d/*
 #fi
 
 # pi02 boot config for wifi stability - 5/25/25 W0CHP
-if [ "${OS_VER}" -ge "12" ] &&  [[ $(/usr/local/sbin/.wpsd-platform-detect) == *"Pi Zero 2 W"* ]] ; then
+if [ "${OS_VER}" -ge 12 ] &&  [[ $(/usr/local/sbin/.wpsd-platform-detect) == *"Pi Zero 2 W"* ]] ; then
     if [ ! -f '/boot/firmware/cmdline02w.txt' ] ; then
         declare -a CURL_OPTIONS=('-Ls' '-A' "bootup cmdline updater (slipstream) $uaStr")
         curl "${CURL_OPTIONS[@]}" -o /boot/firmware/cmdline02w.txt https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/cmdline02w.txt
@@ -1257,7 +1266,7 @@ if [ -d '/etc/issue.d' ] ; then
 fi
 
 # ipv6! 4/2025 W0CHP
-if [ "${OS_VER}" -lt "12" ]; then
+if [ "${OS_VER}" -lt 12 ]; then
     if grep -q 'net.ipv6.conf.all.disable_ipv6 = 1' /etc/sysctl.conf ; then
 	sed -i 's/net.ipv6.conf.all.disable_ipv6 = 1/net.ipv6.conf.all.disable_ipv6 = 0/g' /etc/sysctl.conf
     fi
@@ -1269,7 +1278,7 @@ if [ "${OS_VER}" -lt "12" ]; then
 fi
 
 # misc bw boot fixes - 5/25/2025 W0CHP
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     if grep -q 'quiet' /boot/firmware/cmdline.txt || grep -q 'splash' /boot/firmware/cmdline.txt; then
         declare -a CURL_OPTIONS=('-Ls' '-A' "bootup cmdline updater (slipstream) $uaStr")
         if curl "${CURL_OPTIONS[@]}" -o /boot/firmware/cmdline.txt https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/cmdline.txt; then
@@ -1317,7 +1326,7 @@ if grep -q "^ReloadTime=60" /etc/ysfgateway; then
 fi
 
 # remove smb and deps..how it got snuck in is a mystery  - 5/25 
-if [ "${OS_VER}" -lt "13" ] ; then
+if [ "${OS_VER}" -lt 13 ] ; then
     if dpkg -l | grep -q "^ii.*samba" ; then
 	sudo apt remove -y samba*
     fi
@@ -1364,7 +1373,7 @@ sed -i '/M17TXLevel=/d' "$CONFIG_FILE"
 sed -i '/^=50$/d' "$CONFIG_FILE"
 
 # install apt keys for deb 12+ - 8/11/2025 W0CHP:
-if [ "${OS_VER}" -ge "12" ]; then
+if [ "${OS_VER}" -ge 12 ]; then
     PACKAGE="debian-archive-keyring"
     if ! dpkg -s $PACKAGE >/dev/null 2>&1; then
 	sudo apt update
