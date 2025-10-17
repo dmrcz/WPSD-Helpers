@@ -1109,9 +1109,15 @@ if [ "${OS_VER}" -eq 11 ]; then
     if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-enabled/pi-star ; then
         sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-enabled/pi-star
     fi
+    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-available/pi-star ; then
+        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-available/pi-star
+    fi
 elif [ "${OS_VER}" -ge 13 ]; then
     if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-enabled/wpsd ; then
         sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-enabled/wpsd
+    fi
+    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-available/wpsd ; then
+        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-available/wpsd
     fi
 fi
 
