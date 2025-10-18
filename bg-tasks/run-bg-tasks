@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 if [ "$(id -u)" != "0" ]; then
   echo -e "You need to be root to run this command...\n"
   exit 1
@@ -14,6 +13,15 @@ if [ "$OptIntoDiags_value" != 'true' ] ; then
     echo "User has opted out of updates and diagnostics. Exiting..."
     exit 1
 fi
+
+/usr/local/sbin/.wpsd-running-tasks
+TASK_STATUS=$?
+if [ $TASK_STATUS -eq 0 ]; then
+  echo "Task check '/usr/local/sbin/.wpsd-running-tasks' succeeded (exit 0). No action needed."
+  exit 0
+fi
+echo "Task check failed or returned 1 (exit $TASK_STATUS). Proceeding with update..."
+echo
 
 export GIT_HTTP_CONNECT_TIMEOUT="10"
 export GIT_HTTP_USER_AGENT="WPSD-UpdateCheck (DB BG Task)"
