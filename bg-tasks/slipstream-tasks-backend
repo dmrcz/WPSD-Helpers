@@ -437,7 +437,7 @@ conn_check
 if [[ -f "$armbian_env_file" ]]; then
     # ensure our own patched wiringpi is installed
     if [ -f '/usr/bin/gpio' ]; then
-        if gpio -v 2>/dev/null | grep -q "_WPSD" ; then
+        if /usr/bin/gpio -v 2>/dev/null | grep -q "_WPSD" ; then
             :
         else
             export GIT_HTTP_CONNECT_TIMEOUT="10"
