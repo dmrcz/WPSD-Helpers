@@ -1,2 +1,42 @@
 #!/bin/bash
 
+
+if [ "$(id -u)" != "0" ]; then
+  echo -e "You need to be root to run this command...\n"
+  exit 1
+fi
+
+source /usr/local/sbin/.wpsd-common-funcs
+
+OptIntoDiags_value=${OptIntoDiags_value:-true}
+
+if [ "$OptIntoDiags_value" != 'true' ] ; then
+    echo "User has opted out of updates and diagnostics. Exiting..."
+    exit 1
+fi
+
+export GIT_HTTP_CONNECT_TIMEOUT="10"
+export GIT_HTTP_USER_AGENT="WPSD-UpdateCheck (DB BG Task)"
+
+echo -e "\nChecking connectivity to WPSD update server..."
+conn_check
+if $connection_established; then
+    echo -e "  Connection established!\n"
+
+    echo -e "\nUpdating sbins..."
+    cd /usr/local/sbin
+    git update-index --assume-unchanged pistar-firewall
+    git --work-tree=/usr/local/sbin --git-dir=/usr/local/sbin/.git reset --hard origin/master
+    git --work-tree=/usr/local/sbin --git-dir=/usr/local/sbin/.git pull origin master
+    git --work-tree=/usr/local/sbin --git-dir=/usr/local/sbin/.git reset --hard origin/master
+
+    echo -e "\nResetting firewall back to user prefs..."
+    if [ "$fwState" == "enabled" ]; then
+    /usr/local/sbin/wpsd-system-manager -efw
+    else
+    /usr/local/sbin/wpsd-system-manager -dfw
+    fi
+fi
+
+sudo systemctl start wpsd-running-tasks.service
+
