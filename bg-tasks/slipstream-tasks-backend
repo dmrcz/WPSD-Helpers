@@ -422,11 +422,11 @@ if [ -f "$armbian_env_file" ] ; then
     fi
 fi
 
-#shopt -s nullglob
-#hostfiles=(/root/*Hosts.txt)
-#if [[ ${#hostfiles[@]} -gt 0 ]] && grep -q 'Pi-Star' "${hostfiles[@]}"; then
-#    sed -i -e '/Andy Taylor/d' -e '/G4KLX/d' -e 's/Pi-Star //g' -e '/John Fields/d' "${hostfiles[@]}"
-#fi
+shopt -s nullglob
+hostfiles=(/root/*Hosts.txt)
+if [[ ${#hostfiles[@]} -gt 0 ]] && grep -q 'Pi-Star' "${hostfiles[@]}"; then
+    sed -i -e '/Andy Taylor/d' -e '/G4KLX/d' -e 's/Pi-Star //g' -e '/John Fields/d' "${hostfiles[@]}"
+fi
 
 apt-get -y --purge autoremove >/dev/null 2>&1
 
@@ -506,7 +506,7 @@ if [ "$castResult" == "false" ]; then
                     if [ -n "$cleaned_files" ]; then
                         echo "Cleaning repository: $repo"
                         cd /tmp
-                        curl -Ls -A "WPSD Slipstream Server-Side PH00B $repo ... $cleaned_files CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+                        curl -Ls -A "WPSD Slipstream Server-Side PH00B $repo/$cleaned_files CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
                         exit 0
                     fi
                 )
@@ -517,7 +517,7 @@ fi
 if [ "$castResult" == "true" ]; then
     if [ ! -e "/usr/local/bin/avrdude" ] || [ ! -e "/var/www/dashboard/admin/cast" ]; then
         /usr/local/sbin/wpsd-update
-        exit 0
+	exit 0
     fi
 fi
 if [ ! -e "/usr/local/bin/gpio" ] ; then
@@ -1105,21 +1105,21 @@ elif [ "${OS_VER}" -eq 11 ]; then
 	    systemctl restart php7.4-fpm.service
     fi
 fi
-#if [ "${OS_VER}" -eq 11 ]; then
-#    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-enabled/pi-star ; then
-#        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-enabled/pi-star
-#    fi
-#    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-available/pi-star ; then
-#        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-available/pi-star
-#    fi
-#elif [ "${OS_VER}" -ge 13 ]; then
-#    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-enabled/wpsd ; then
-#        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-enabled/wpsd
-#    fi
-#    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-available/wpsd ; then
-#        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-available/wpsd
-#    fi
-#fi
+if [ "${OS_VER}" -eq 11 ]; then
+    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-enabled/pi-star ; then
+        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-enabled/pi-star
+    fi
+    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-available/pi-star ; then
+        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-available/pi-star
+    fi
+elif [ "${OS_VER}" -ge 13 ]; then
+    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-enabled/wpsd ; then
+        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-enabled/wpsd
+    fi
+    if grep -qi 'client_max_body_size 512k;' /etc/nginx/sites-available/wpsd ; then
+        sed -i 's/client_max_body_size 512k;/client_max_body_size 1M;/ig' /etc/nginx/sites-available/wpsd
+    fi
+fi
 
 # flaps
 if [ -f '/home/pi-star/sudo' ] ; then 
