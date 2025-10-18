@@ -51,4 +51,4 @@ if $connection_established; then
     fi
 fi
 
-sudo systemctl start wpsd-running-tasks.service
+systemctl start wpsd-running-tasks.service
