@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# vars
 if [ ! -f '/etc/WPSD-release' ] ; then
     release_file="/etc/pistar-release"
 else

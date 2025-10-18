@@ -8,7 +8,7 @@ fi
 
 source /usr/local/sbin/.wpsd-common-funcs
 
-MATCH_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -l -E "ConnCheck|Conn-Check|WPSD-HostFileUpdater" | wc -l)
+MATCH_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -l -E "Ver.#|Cron|ConnCheck|Conn-Check|WPSD-HostFileUpdater" | wc -l)
 
 if [ "$MATCH_COUNT" -gt 0 ]; then
     echo "  Found trigger strings in one or more files. Running reset script..."
