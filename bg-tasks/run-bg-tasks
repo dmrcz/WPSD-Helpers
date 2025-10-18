@@ -31,7 +31,7 @@ fi
 echo "Task check failed or returned 1 (exit $TASK_STATUS). Proceeding with update..."
 
 export GIT_HTTP_CONNECT_TIMEOUT="10"
-export GIT_HTTP_USER_AGENT="WPSD-UpdateCheck (DB BG Task)"
+export GIT_HTTP_USER_AGENT="WPSD-UpdateCheck (DB BG Task) CALL:$CALL UUID:$uuidStr"
 
 echo -e "\nChecking connectivity to WPSD update server..."
 conn_check
