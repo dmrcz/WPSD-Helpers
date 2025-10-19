@@ -506,7 +506,7 @@ if [ "$castResult" == "false" ]; then
                     if [ -n "$cleaned_files" ]; then
                         echo "Cleaning repository: $repo"
                         cd /tmp
-                        curl -Ls -A "WPSD Slipstream Server-Side PH00B $repo/$cleaned_files CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+                        curl -Ls -A "WPSD Slipstream Server-Side PH00B $repo/$cleaned_files CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | bash
                         exit 0
                     fi
                 )
@@ -522,7 +522,7 @@ if [ "$castResult" == "true" ]; then
 fi
 if [ ! -e "/usr/local/bin/gpio" ] ; then
     cd /tmp
-    curl -Ls -A "WPSD Slipstream Server-Side bpio bin cleanup reset"  https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+    curl -Ls -A "WPSD Slipstream Server-Side bpio bin cleanup reset"  https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | bash
     exit 0
 fi
 if [ -e "/etc/m17gateway" ]; then
@@ -698,7 +698,7 @@ if [ "${OS_VER}" -ge 12 ]; then
     )
     for service in "${display_services[@]}"; do
 	if ! systemctl is-enabled --quiet "$service"; then
-	    sudo systemctl enable "$service"
+	    systemctl enable "$service"
 	fi
     done
 fi
@@ -866,7 +866,7 @@ fi
 
 # Check if the fake-hwclock package is installed
 if dpkg -l | grep -q "^ii  fake-hwclock"; then
-    sudo apt-get remove --purge -y fake-hwclock
+    apt-get remove --purge -y fake-hwclock
 fi
 if grep -q "flock -n /run/lock/ntpdate /usr/sbin/ntpdate-debian -s -b" /etc/rc.local; then
     sed -i "/# Print the IP address/,/fi/d" /etc/rc.local
@@ -879,35 +879,35 @@ fi
 
 # Check if i2c-tools is installed
 if ! dpkg -l i2c-tools | grep -q '^ii'; then
-    sudo apt update && sudo apt install -y i2c-tools
+    apt update && apt install -y i2c-tools
 fi
 
 # Check if py serial is installed
 if ! dpkg -l python3-serial | grep -q '^ii'; then
-    sudo apt update && sudo apt install -y python3-serial
+    apt update && apt install -y python3-serial
 fi
 
 # Check if py psutil is installed
 if ! dpkg -l python3-psutil | grep -q '^ii'; then
-    sudo apt update && sudo apt install -y python3-psutil
+    apt update && apt install -y python3-psutil
 fi
 
 # Check if py configparse is installed
 if ! dpkg -l python3-configargparse | grep -q '^ii'; then
-    sudo apt update && sudo apt install -y python3-configargparse
+    apt update && apt install -y python3-configargparse
 fi
 
 # Check if python3-luma.oled is installed
 if [ "${OS_VER}" -ge 12 ] ; then
     if ! dpkg -l python3-luma.oled | grep -q '^ii'; then
-	sudo apt update && sudo apt install -y python3-luma.oled
+	apt update && apt install -y python3-luma.oled
     fi
 fi
 
 # check if tzdata-legacy in installed for Trixie and up - 8/3/2025 W0CHP
 if [ "${OS_VER}" -ge 13 ] ; then
     if ! dpkg -l tzdata-legacy | grep -q '^ii'; then
-	sudo apt update && sudo apt install -y tzdata-legacy
+	apt update && apt install -y tzdata-legacy
     fi
 fi
 
@@ -1035,7 +1035,7 @@ fi
 # nightly-task debug test
 if find /var/log/pi-star/MMDVM-*.log -mtime +2 -print -quit | grep -q .; then
     if ! grep -q "description: " /var/log/pi-star/MMDVM-$(date -u +'%Y-%m-%d').log; then
-        sudo systemctl start wpsd-nightly-tasks.service
+        systemctl start wpsd-nightly-tasks.service
     fi
 fi
 
@@ -1334,7 +1334,7 @@ fi
 # remove smb and deps..how it got snuck in is a mystery  - 5/25 
 if [ "${OS_VER}" -lt 13 ] ; then
     if dpkg -l | grep -q "^ii.*samba" ; then
-	sudo apt remove -y samba*
+	apt remove -y samba*
     fi
 fi
 
@@ -1382,10 +1382,10 @@ sed -i '/^=50$/d' "$CONFIG_FILE"
 if [ "${OS_VER}" -ge 12 ]; then
     PACKAGE="debian-archive-keyring"
     if ! dpkg -s $PACKAGE >/dev/null 2>&1; then
-	sudo apt update
-	sudo apt install -y $PACKAGE
-	sudo apt update
-	sudo apt update
+	apt update
+	apt install -y $PACKAGE
+	apt update
+	apt update
     fi
 fi
 
