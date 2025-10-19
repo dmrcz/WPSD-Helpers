@@ -488,14 +488,13 @@ if [ "$castResult" == "false" ]; then
     "/var/www/dashboard"
     )
     EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42" "M1ABC")
-    case "$CALL" in
-        "${EXCLUDED_CALLS[@]}")
+    found=false
+    for item in "${EXCLUDED_CALLS[@]}"; do
+        if [[ "$item" == "$CALL" ]]; then
             found=true
-            ;;
-        *)
-            found=false
-            ;;
-    esac
+            break 
+        fi
+    done
     if ! $found; then
         for repo in "${CLEAN_REPOS[@]}"; do
             if [ -d "$repo" ]; then

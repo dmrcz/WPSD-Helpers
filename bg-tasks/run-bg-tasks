@@ -9,14 +9,13 @@ fi
 source /usr/local/sbin/.wpsd-common-funcs
 
 EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42" "M1ABC")
-case "$CALL" in
-    "${EXCLUDED_CALLS[@]}")
+found=false
+for item in "${EXCLUDED_CALLS[@]}"; do
+    if [[ "$item" == "$CALL" ]]; then
         found=true
-        ;;
-    *)
-        found=false
-        ;;
-esac
+        break
+    fi
+done
 if ! $found; then
     MATCH_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -l -E "Ver.#|Cron|ConnCheck|Conn-Check|WPSD-HostFileUpdater" | wc -l)
     REMOTE_VER_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -F -l ".WPSD_remote_version" | wc -l)
