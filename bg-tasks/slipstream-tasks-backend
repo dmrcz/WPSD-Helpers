@@ -1362,12 +1362,12 @@ if [ -f '/usr/local/sbin/m17gateway.service' ] ; then
     rm -rf /usr/local/etc/M17*
 fi
 CONFIG_FILE="/etc/mmdvmhost"
-SECTIONS_TO_DELETE=("M17" "M17 Network")
-if grep -q "M17 Network" "$CONFIG_FILE"; then
+SECTIONS_TO_DELETE=("M17" "M17 Network" "AX.25" "AX.25 Network")
+if grep -E -q "M17 Network|AX.25 Network" "$CONFIG_FILE"; then
     for section in "${SECTIONS_TO_DELETE[@]}"; do
         sed -i -E "/^\\[$section\\]/,/^\\s*\\[/{/^\\[$section\\]/d;/^\\s*\\[/!d}" "$CONFIG_FILE"
     done
-    systemctl restart mmdvmhost.service
+    #systemctl restart mmdvmhost.service
 fi
 if [ -f '/etc/m17gateway' ] ; then
     rm -fv /etc/m17gateway
