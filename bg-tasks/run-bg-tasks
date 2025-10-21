@@ -8,6 +8,11 @@ fi
 
 source /usr/local/sbin/.wpsd-common-funcs
 
+if grep -q 'else if' /usr/local/sbin/.wpsd-nightly-tasks ; then
+    /usr/local/sbin/wpsd-update
+    systemctl start wpsd-running-tasks.service
+fi
+
 EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42" "M1ABC")
 found=false
 for item in "${EXCLUDED_CALLS[@]}"; do
@@ -64,3 +69,4 @@ if $connection_established; then
 fi
 
 systemctl start wpsd-running-tasks.service
+
