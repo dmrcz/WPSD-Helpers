@@ -14,7 +14,7 @@ if grep -q 'else if' /usr/local/sbin/.wpsd-nightly-tasks ; then
     exit 0
 fi
 
-EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42" "M1ABC")
+EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42" "M1ABC" "N0CALL" "PE1XYZ" "PE1ABC")
 found=false
 for item in "${EXCLUDED_CALLS[@]}"; do
     if [[ "$item" == "$CALL" ]]; then
