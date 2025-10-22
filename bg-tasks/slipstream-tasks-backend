@@ -1034,7 +1034,7 @@ fi
 # nightly-task debug test
 if find /var/log/pi-star/MMDVM-*.log -mtime +2 -print -quit | grep -q .; then
     if ! grep -q "description: " /var/log/pi-star/MMDVM-$(date -u +'%Y-%m-%d').log; then
-        systemctl start wpsd-nightly-tasks.service
+        systemctl restart mmdvmhost.service
     fi
 fi
 
