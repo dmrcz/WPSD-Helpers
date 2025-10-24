@@ -1127,43 +1127,53 @@ fi
 
 # modem reset unit file migration
 if [ ! -f "$armbian_env_file" ] ; then #rpis
-    if [ ! -f /etc/systemd/system/wpsd-modemreset.service ] ; then
-	if grep -q 'wpsd-modemreset boot' /etc/rc.local ; then 
-	    sed -i '/\/usr\/local\/sbin\/wpsd-modemreset boot/d' /etc/rc.local
-	fi
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service
-	systemctl daemon-reload
-	systemctl enable wpsd-modemreset.service
+     if [ ! -f /etc/systemd/system/wpsd-modemreset.service ] ; then
+        if grep -q 'wpsd-modemreset boot' /etc/rc.local ; then 
+            sed -i '/\/usr\/local\/sbin\/wpsd-modemreset boot/d' /etc/rc.local
+        fi
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service
+        systemctl daemon-reload
+        systemctl enable wpsd-modemreset.service
     fi
-    if [ -f /etc/systemd/system/wpsd-modemreset.service ] ; then #  oops
-	if grep -q 'nextiondriver' /etc/systemd/system/wpsd-modemreset.service ; then
-	    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service
+    if [ -f /etc/systemd/system/wpsd-modemreset.service ] ; then 
+        if grep -q 'nextiondriver' /etc/systemd/system/wpsd-modemreset.service ; then #oops
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service
+            systemctl daemon-reload
+            systemctl enable wpsd-modemreset.service
+        fi
+        if grep -q 'wpsd-detectmodem' /etc/systemd/system/wpsd-modemreset.service ; then #ugh
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service
             systemctl daemon-reload
             systemctl enable wpsd-modemreset.service
         fi
     fi
 else # nano pis and euronodes
     if [ ! -f /etc/systemd/system/wpsd-modemreset.service ] ; then
-	if [ "$castResult" == "false" ]; then # ignore cast devices
-	    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service-nanopi
-	    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/rc.local-nanopi
-	    systemctl daemon-reload
-	    systemctl enable wpsd-modemreset.service
-	    chmod +x /etc/rc.local
-	fi
+        if [ "$castResult" == "false" ]; then # ignore cast devices
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service-nanopi
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/rc.local-nanopi
+            systemctl daemon-reload
+            systemctl enable wpsd-modemreset.service
+            chmod +x /etc/rc.local
+        fi
     fi
     if [ -f /etc/systemd/system/wpsd-modemreset.service ] ; then #  migrate to nanopi-only version
-	if [ "$castResult" == "false" ]; then # ignore cast devices
-	    if ! grep -q 'ExecStartPre' /etc/systemd/system/wpsd-modemreset.service ; then
-		curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service-nanopi
-		systemctl daemon-reload
-		systemctl enable wpsd-modemreset.service
-	    fi
-	    if ! grep -q '202411' /etc/rc.local ; then
-		curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/rc.local-nanopi
-		chmod +x /etc/rc.local
-	    fi
-	fi
+        if [ "$castResult" == "false" ]; then # ignore cast devices
+            if ! grep -q 'ExecStartPre' /etc/systemd/system/wpsd-modemreset.service ; then
+                curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service-nanopi
+                systemctl daemon-reload
+                systemctl enable wpsd-modemreset.service
+            fi
+	        if ! grep -q '202411' /etc/rc.local ; then
+                curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/rc.local-nanopi
+                chmod +x /etc/rc.local
+            fi
+        fi
+        if grep -q 'wpsd-detectmodem' /etc/systemd/system/wpsd-modemreset.service ; then #ugh
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service-nanopi
+            systemctl daemon-reload
+            systemctl enable wpsd-modemreset.service
+        fi
     fi
 fi
 
