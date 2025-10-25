@@ -1032,8 +1032,11 @@ fi
 # end new auto-task framework
 
 # nightly-task debug test
+LOG_MMDVM_NOW="/var/log/pi-star/MMDVM-$(date -u +'%Y-%m-%d').log"
+LOG_MMDVM_PREVIOUS="/var/log/pi-star/MMDVM-$(date -u --date="yesterday" +'%Y-%m-%d').log"
+LOG_MMDVM_DAY_BEFORE="/var/log/pi-star/MMDVM-$(date -u --date="2 days ago" +'%Y-%m-%d').log"
 if find /var/log/pi-star/MMDVM-*.log -print -quit | grep -q .; then
-    if ! grep -q "description: " /var/log/pi-star/MMDVM-$(date -u +'%Y-%m-%d').log; then
+    if ! grep -q "description: " "$LOG_MMDVM_NOW" "$LOG_MMDVM_PREVIOUS" "$LOG_MMDVM_DAY_BEFORE" 2>/dev/null; then
         systemctl restart mmdvmhost.service
         systemctl start wpsd-cache.service
     fi
