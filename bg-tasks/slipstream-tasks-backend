@@ -1352,15 +1352,17 @@ if [ "${OS_VER}" -lt 13 ] ; then
 fi
 
 # m0ar cluebellz - ugh
-for file in /etc/mmdvmhost /etc/dmrgateway /etc/dgidgateway /etc/nxdngateway ; do
-    if grep -q "Longitude=-91.76" "$file" && grep -q "Latitude=44.12" "$file" ; then
-        sed -i -e 's/^Longitude=.*/Longitude=0.0/' -e 's/^Latitude=.*/Latitude=0.0/' "$file"
+for file in /etc/mmdvmhost /etc/dmrgateway /etc/ysfgateway /etc/dgidgateway /etc/nxdngateway ; do
+    if grep -q "-91.762667" "$file" && grep -q "44.127667" "$file" ; then
+        sed -i -e 's/-91.762667/0.0/g' -e 's/44.127667/0.0/g' "$file"
     fi
 done
-if grep -q "longitude1=-91.76" /etc/ircddbgateway && grep -q "latitude1=44.12" /etc/ircddbgateway; then
-    sed -i -e 's/^longitude1=.*/longitude1=0/' -e 's/^latitude1=.*/latitude1=0/' /etc/ircddbgateway
+if grep -q "44.127667" /etc/ircddbgateway && grep -q "-91.762667" /etc/ircddbgateway; then
+    sed -i \
+        -e 's/-91.762667/0/g' \
+        -e 's/44.127667/0/g' \
+        /etc/ircddbgateway
 fi
-
 # m17 cleanups - 7/11/25
 if grep -q '_M17' /etc/wpsd-upnp-rules ; then
     sed -i '/_M17/d' /etc/wpsd-upnp-rules
