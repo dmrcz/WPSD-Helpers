@@ -1353,12 +1353,12 @@ fi
 
 # m0ar cluebellz - ugh
 for file in /etc/mmdvmhost /etc/dmrgateway /etc/ysfgateway /etc/dgidgateway /etc/nxdngateway ; do
-    if grep -q "-91.762667" "$file" && grep -q "44.127667" "$file" ; then
+    if grep -q -- "-91.762667" "$file" && grep -q "44.127667" "$file" ; then
         sed -i -e 's/-91.762667/0.0/g' -e 's/44.127667/0.0/g' "$file"
         wpsd-services restart
     fi
 done
-if grep -q "44.127667" /etc/ircddbgateway && grep -q "-91.762667" /etc/ircddbgateway; then
+if grep -q "44.127667" /etc/ircddbgateway && grep -q -- "-91.762667" /etc/ircddbgateway; then
     sed -i -e 's/-91.762667/0/g' -e 's/44.127667/0/g' /etc/ircddbgateway
         wpsd-services restart
 fi
