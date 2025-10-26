@@ -433,6 +433,31 @@ apt-get -y --purge autoremove >/dev/null 2>&1
 # grab and cache latest WPSD hashes
 conn_check
 
+INVALID=("206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST")
+INVALID_REASON=""
+CALL_UPPER="${CALL^^}"
+LEN=${#CALL_UPPER}
+if (( LEN < 3 )); then
+    INVALID_REASON="ISSUE: Call less than 3 chars"
+elif (( LEN == 3 )); then
+    if [[ ! "$CALL_UPPER" =~ ^[A-Z][0-9][A-Z]$ ]]; then
+        INVALID_REASON="ISSUE: Invalid 3-char format (must be L-D-L)"
+    fi
+elif (( LEN > 7 )); then
+    INVALID_REASON="ISSUE: Call more than 7 chars"
+else
+    for sign in "${INVALID[@]}"; do
+        if [[ "$CALL_UPPER" == *"$sign"* ]]; then
+            INVALID_REASON="ISSUE: Invalid call (partial match: $sign)"
+            break
+        fi
+    done
+fi
+if [[ -n "$INVALID_REASON" ]]; then
+    curl -I -A "$INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://w0chp.radio/
+    shutdown -h now
+fi
+
 # DVMega sun8i stuff
 if [[ -f "$armbian_env_file" ]]; then
     # ensure our own patched wiringpi is installed
