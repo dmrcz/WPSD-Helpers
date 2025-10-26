@@ -442,12 +442,16 @@ GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="Server-Side sbin Update boots
 #cd "$web_repo_path" || { echo "Failed to change directory to $web_repo_path"; exit 1; }
 #GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="Server-Side webcode Update bootstrap ${gitUaStr}" git pull origin master > /dev/null 2>&1
 
-INVALID=("206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST")
+INVALID=("206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST" "KU0SLNK" "LINK")
 INVALID_REASON=""
 CALL_UPPER="${CALL^^}"
 LEN=${#CALL_UPPER}
 if [[ -z "$CALL" ]]; then
+    # CALL is empty, which is allowed. Do nothing.
     :
+elif [[ ! "$CALL_UPPER" =~ ^[A-Z0-9]+$ ]]; then
+    # Check for non-alphanumeric characters
+    INVALID_REASON="ISSUE: Call contains non-alphanumeric chars"
 elif (( LEN < 3 )); then
     INVALID_REASON="ISSUE: Call less than 3 chars"
 elif (( LEN == 3 )); then
@@ -457,6 +461,7 @@ elif (( LEN == 3 )); then
 elif (( LEN > 7 )); then
     INVALID_REASON="ISSUE: Call more than 7 chars"
 else
+    # This runs for lengths 4-7 and purely alphanumeric calls
     if [[ ! "$CALL_UPPER" =~ [0-9] ]]; then
         INVALID_REASON="ISSUE: Invalid call (no digit)"
     else
