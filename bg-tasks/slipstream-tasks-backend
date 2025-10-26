@@ -437,7 +437,9 @@ INVALID=("206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST")
 INVALID_REASON=""
 CALL_UPPER="${CALL^^}"
 LEN=${#CALL_UPPER}
-if (( LEN < 3 )); then
+if [[ -z "$CALL" ]]; then
+    :
+elif (( LEN < 3 )); then
     INVALID_REASON="ISSUE: Call less than 3 chars"
 elif (( LEN == 3 )); then
     if [[ ! "$CALL_UPPER" =~ ^[A-Z][0-9][A-Z]$ ]]; then
