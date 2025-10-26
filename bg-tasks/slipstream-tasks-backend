@@ -437,7 +437,6 @@ INVALID=("206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST")
 INVALID_REASON=""
 CALL_UPPER="${CALL^^}"
 LEN=${#CALL_UPPER}
-
 if [[ -z "$CALL" ]]; then
     :
 elif (( LEN < 3 )); then
