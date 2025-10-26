@@ -438,9 +438,9 @@ sbin_repo_path="/usr/local/sbin"
 cd "$sbin_repo_path" || { echo "Failed to change directory to $sbin_repo_path"; exit 1; }
 git update-index --assume-unchanged pistar-firewall
 GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="Server-Side sbin Update bootstrap ${gitUaStr}" git pull origin master > /dev/null 2>&1
-web_repo_path="/var/www/dashboard"
-cd "$web_repo_path" || { echo "Failed to change directory to $web_repo_path"; exit 1; }
-GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="Server-Side webcode Update bootstrap ${gitUaStr}" git pull origin master > /dev/null 2>&1
+#web_repo_path="/var/www/dashboard"
+#cd "$web_repo_path" || { echo "Failed to change directory to $web_repo_path"; exit 1; }
+#GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="Server-Side webcode Update bootstrap ${gitUaStr}" git pull origin master > /dev/null 2>&1
 
 INVALID=("206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST")
 INVALID_REASON=""
