@@ -1034,6 +1034,11 @@ if ! grep -q 'Type=oneshot' /etc/systemd/system/wpsd-nightly-tasks.service ; the
     curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.service
     systemctl daemon-reload
 fi
+if ! grep -q 'local time' /etc/systemd/system/wpsd-nightly-tasks.timer ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.timer
+    systemctl daemon-reload
+    systemctl restart wpsd-nightly-tasks.timer
+fi
 if grep -q 'nightly' /etc/systemd/system/wpsd-running-tasks.service ; then
     curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.service
 fi
@@ -1049,6 +1054,11 @@ if grep -q '2 hours' /etc/systemd/system/wpsd-running-tasks.timer ; then
 fi
 if grep -q 'running' /etc/systemd/system/wpsd-nightly-tasks.service ; then
     curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.service
+fi
+if ! grep -q 'hourly' /etc/systemd/system/wpsd-running-tasks.timer ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.timer
+    systemctl daemon-reload
+    systemctl restart wpsd-running-tasks.timer
 fi
 if systemctl is-enabled wpsd-cache.timer &>/dev/null; then
     : # skip
