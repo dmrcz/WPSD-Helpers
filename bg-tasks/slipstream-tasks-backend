@@ -1081,8 +1081,9 @@ if [ -f '/etc/systemd/system/wpsd-nightly-tassk.service' ]; then
     rm -rf /etc/systemd/system/wpsd-nightly-tassk.service
     systemctl daemon-reload
 fi
-if ! grep -q 'Persistent=true' /etc/systemd/system/wpsd-nightly-tasks.timer ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.timer    systemctl daemon-reload
+if grep -q 'Persistent=true' /etc/systemd/system/wpsd-nightly-tasks.timer ; then
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.timer
+    systemctl daemon-reload
     systemctl restart wpsd-nightly-tasks.timer
 fi
 # end new auto-task framework
