@@ -1086,6 +1086,32 @@ if grep -q 'Persistent=true' /etc/systemd/system/wpsd-nightly-tasks.timer ; then
     systemctl daemon-reload
     systemctl restart wpsd-nightly-tasks.timer
 fi
+UNITS_TO_CHECK=(
+  "wpsd-nightly-task.timer"
+  "wpsd-running-tasks.timer"
+)
+CHANGED_TIMERS=()
+NEED_GLOBAL_RELOAD=false
+for unit in "${UNITS_TO_CHECK[@]}"; do
+  NEEDS_RELOAD=$(systemctl show "$unit" --property=NeedDaemonReload 2>/dev/null)
+  if [ $? -ne 0 ]; then
+    continue
+  fi
+  if [ "$NEEDS_RELOAD" = "NeedDaemonReload=yes" ]; then
+    CHANGED_TIMERS+=("$unit")
+    NEED_GLOBAL_RELOAD=true
+  else
+    :
+  fi
+done
+if [ "$NEED_GLOBAL_RELOAD" = true ]; then
+  systemctl daemon-reload
+  for timer in "${CHANGED_TIMERS[@]}"; do
+    systemctl restart "$timer"
+  done
+else
+  :
+fi
 # end new auto-task framework
 
 # nightly-task debug test
