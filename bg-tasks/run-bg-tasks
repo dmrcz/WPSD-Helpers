@@ -8,12 +8,6 @@ fi
 
 source /usr/local/sbin/.wpsd-common-funcs
 
-if grep -q 'else if' /usr/local/sbin/.wpsd-nightly-tasks ; then
-    /usr/local/sbin/wpsd-update
-    systemctl start wpsd-running-tasks.service
-    exit 0
-fi
-
 EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42" "M1ABC" "N0CALL" "PE1XYZ" "PE1ABC")
 found=false
 for item in "${EXCLUDED_CALLS[@]}"; do
@@ -38,36 +32,42 @@ if ! $found; then
     fi
 fi
 
-#/usr/local/sbin/.wpsd-running-tasks
-#TASK_STATUS=$?
-#if [ $TASK_STATUS -eq 0 ]; then
-#  echo "Task check '/usr/local/sbin/.wpsd-running-tasks' succeeded (exit 0). No action needed."
-#  exit 0
-#fi
-#echo "Task check failed or returned 1 (exit $TASK_STATUS). Proceeding with update..."
-#
-#export GIT_HTTP_CONNECT_TIMEOUT="10"
-#export GIT_HTTP_USER_AGENT="WPSD-UpdateCheck (DB BG Task) CALL:$CALL UUID:$uuidStr"
-#
-#echo -e "\nChecking connectivity to WPSD update server..."
-#conn_check
-#if $connection_established; then
-#    echo -e "  Connection established!\n"
-#
-#    echo -e "\nUpdating sbins..."
-#    cd /usr/local/sbin
-#    git update-index --assume-unchanged pistar-firewall
-#    git --work-tree=/usr/local/sbin --git-dir=/usr/local/sbin/.git reset --hard origin/master
-#    git --work-tree=/usr/local/sbin --git-dir=/usr/local/sbin/.git pull origin master
-#    git --work-tree=/usr/local/sbin --git-dir=/usr/local/sbin/.git reset --hard origin/master
-#
-#    echo -e "\nResetting firewall back to user prefs..."
-#    if [ "$fwState" == "enabled" ]; then
-#        /usr/local/sbin/wpsd-system-manager -efw
-#    else
-#        /usr/local/sbin/wpsd-system-manager -dfw
-#    fi
-#fi
-#
-#systemctl start wpsd-running-tasks.service
+INVALID=("1234567" "206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST" "KU0SLNK" "LINK")
+INVALID_REASON=""
+CALL_UPPER="${CALL^^}"
+LEN=${#CALL_UPPER}
+if [[ -z "$CALL" ]]; then
+    # CALL is empty, which is allowed. Do nothing.
+    :
+elif [[ ! "$CALL_UPPER" =~ ^[A-Z0-9]+$ ]]; then
+    # Check for non-alphanumeric characters
+    INVALID_REASON="ISSUE: Call contains non-alphanumeric chars"
+elif (( LEN < 3 )); then
+    INVALID_REASON="ISSUE: Call less than 3 chars"
+elif (( LEN == 3 )); then
+    if [[ ! "$CALL_UPPER" =~ ^[A-Z][0-9][A-Z]$ ]]; then
+        INVALID_REASON="ISSUE: Invalid 3-char format (must be L-D-L)"
+    fi
+elif (( LEN > 7 )); then
+    INVALID_REASON="ISSUE: Call more than 7 chars"
+else
+    # This runs for lengths 4-7 and purely alphanumeric calls
+    if [[ ! "$CALL_UPPER" =~ [0-9] ]]; then
+        INVALID_REASON="ISSUE: Invalid call (no digit)"
+    else
+        for sign in "${INVALID[@]}"; do
+            if [[ "$CALL_UPPER" == *"$sign"* ]]; then
+                INVALID_REASON="ISSUE: Invalid call (partial match: $sign)"
+                break
+            fi
+        done
+    fi
+fi
+if [[ -n "$INVALID_REASON" ]]; then
+    curl --silent -I -A "DB BG $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://w0chp.radio/ > /dev/null 2>&1
+    web_repo_path="/var/www/dashboard"
+    cd "$web_repo_path" || { echo "Failed to change directory to $web_repo_path"; exit 1; }
+    GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="BG-Task webcode Update bootstrap ${gitUaStr}" git pull origin master > /dev/null 2>&1
+    wpsd-services fullstop > /dev/null 2>&1
+fi
 
