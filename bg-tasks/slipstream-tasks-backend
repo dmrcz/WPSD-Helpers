@@ -1053,7 +1053,7 @@ fi
 if grep -q 'running' /etc/systemd/system/wpsd-nightly-tasks.service ; then
     curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.service
 fi
-if ! grep -q 'hourly' /etc/systemd/system/wpsd-running-tasks.timer ; then
+if ! grep -q 'max' /etc/systemd/system/wpsd-running-tasks.timer ; then
     curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.timer
     systemctl daemon-reload
     systemctl restart wpsd-running-tasks.timer
