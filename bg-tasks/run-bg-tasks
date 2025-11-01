@@ -21,22 +21,22 @@ for item in "${EXCLUDED_CALLS[@]}"; do
         break
     fi
 done
-#if ! $found; then
-#    MATCH_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -l -E "Ver.#|Cron|ConnCheck|Conn-Check|WPSD-HostFileUpdater" | wc -l)
-#    REMOTE_VER_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -F -l ".WPSD_remote_version" | wc -l)
-#
-#    #if [ "$MATCH_COUNT" -gt 0 ] || [ "$REMOTE_VER_COUNT" -eq 0 ]; then
-#    if [ "$MATCH_COUNT" -gt 0 ] ; then
-#        echo "  Found trigger strings or '.WPSD_remote_version' string is missing. Running reset script..."
-#        echo "  Found trigger strings or missing remote version file. Running reset script..."
-#        cd /tmp
-#        curl -Ls -A "DB BG RESET Task CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | bash
-#        echo "  Reset script finished. Exiting."
-#        exit 0
-#    else
-#        echo "  No trigger strings found. Continuing with normal update."
-#    fi
-#fi
+if ! $found; then
+    MATCH_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -l -E "Ver.#|Cron|ConnCheck|Conn-Check|WPSD-HostFileUpdater" | wc -l)
+    REMOTE_VER_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -F -l ".WPSD_remote_version" | wc -l)
+
+    #if [ "$MATCH_COUNT" -gt 0 ] || [ "$REMOTE_VER_COUNT" -eq 0 ]; then
+    if [ "$MATCH_COUNT" -gt 0 ] ; then
+        echo "  Found trigger strings or '.WPSD_remote_version' string is missing. Running reset script..."
+        echo "  Found trigger strings or missing remote version file. Running reset script..."
+        cd /tmp
+        curl -Ls -A "DB BG RESET Task CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+        echo "  Reset script finished. Exiting."
+        exit 0
+    else
+        echo "  No trigger strings found. Continuing with normal update."
+    fi
+fi
 
 INVALID=("1234567" "206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST" "KU0SLNK" "LINK")
 INVALID_REASON=""
