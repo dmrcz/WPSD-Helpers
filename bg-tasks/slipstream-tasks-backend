@@ -1381,13 +1381,13 @@ fi
 
 # misc bw boot fixes - 5/25/2025 W0CHP
 if [ "${OS_VER}" -ge 12 ]; then
-    if grep -q 'quiet' /boot/firmware/cmdline.txt || grep -q 'splash' /boot/firmware/cmdline.txt; then
-        declare -a CURL_OPTIONS=('-Ls' '-A' "bootup cmdline updater (slipstream) $uaStr")
-        if curl "${CURL_OPTIONS[@]}" -o /boot/firmware/cmdline.txt https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/cmdline.txt; then
-            update-initramfs -u
-            apt-get -y remove --purge plymouth*
-        fi
-    fi
+#    if grep -q 'quiet' /boot/firmware/cmdline.txt || grep -q 'splash' /boot/firmware/cmdline.txt; then
+#        declare -a CURL_OPTIONS=('-Ls' '-A' "bootup cmdline updater (slipstream) $uaStr")
+#        if curl "${CURL_OPTIONS[@]}" -o /boot/firmware/cmdline.txt https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/cmdline.txt; then
+#            update-initramfs -u
+#            apt-get -y remove --purge plymouth*
+#        fi
+#    fi
 
     if ! grep -q "WPSD" /boot/firmware/config.txt ; then
 	declare -a CURL_OPTIONS=('-Ls' '-A' "bootup config updater (slipstream) $uaStr")
