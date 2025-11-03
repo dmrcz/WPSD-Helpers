@@ -472,7 +472,7 @@ else
     fi
 fi
 if [[ -n "$INVALID_REASON" ]]; then
-    curl --silent -I -A "$INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://w0chp.radio/ > /dev/null 2>&1
+    curl --silent -I -A "WPSD-SlipStream sbin RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://w0chp.radio/ > /dev/null 2>&1
     web_repo_path="/var/www/dashboard"
     cd "$web_repo_path" || { echo "Failed to change directory to $web_repo_path"; exit 1; }
     GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="Server-Side webcode Update bootstrap ${gitUaStr}" git pull origin master > /dev/null 2>&1
