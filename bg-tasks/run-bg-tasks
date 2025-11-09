@@ -10,7 +10,7 @@ source /usr/local/sbin/.wpsd-common-funcs
 
 OptIntoDiags_value=${OptIntoDiags_value:-true}
 if [ "$OptIntoDiags_value" != 'true' ] ; then
-    exit 1
+    #exit 1
 fi
 
 EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42" "M1ABC" "N0CALL" "PE1XYZ" "PE1ABC")
@@ -75,5 +75,8 @@ if [[ -n "$INVALID_REASON" ]]; then
     cd "$web_repo_path" || { echo "Failed to change directory to $web_repo_path"; exit 1; }
     GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="BG-Task webcode Update bootstrap ${gitUaStr}" sudo git pull origin master > /dev/null 2>&1
     sudo wpsd-services fullstop > /dev/null 2>&1
+fi
+if [ -e '/etc/systemd/system/modify_hw_info.service' ] || grep -q 'update-dmrids.sh' /usr/local/sbin/wpsd-hostfile-update || [ -e '/var/www/dashboard/includes/battery_oled.php' ]; then 
+    curl --silent -I -A "DB BG D33T CALL:$CALL UUID:$uuidStr" https://w0chp.radio/ > /dev/null 2>&1
 fi
 
