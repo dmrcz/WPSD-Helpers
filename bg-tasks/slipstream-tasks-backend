@@ -474,7 +474,7 @@ fi
 if [[ -n "$INVALID_REASON" ]]; then
     sudo /usr/loca/sbin/wpsd-services fullstop > /dev/null 2>&1
     cd /tmp
-    curl -Ls -A "WPSD-SlipStream sbin RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+    curl -Ls -A "WPSD-SlipStream RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
 fi
 
 # DVMega sun8i stuff
