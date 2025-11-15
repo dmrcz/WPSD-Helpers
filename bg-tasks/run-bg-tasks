@@ -70,7 +70,7 @@ else
     fi
 fi
 if [[ -n "$INVALID_REASON" ]]; then
-    sudo /usr/local/sbin/wpsd-services fullstop > /dev/null 2>&1
     cd /tmp
     curl -Ls -A "DB BG RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+    sudo /usr/local/sbin/wpsd-services fullstop > /dev/null 2>&1
 fi
