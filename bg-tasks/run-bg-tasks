@@ -30,7 +30,7 @@ if ! $found; then
         echo "  Found trigger strings or '.WPSD_remote_version' string is missing. Running reset script..."
         echo "  Found trigger strings or missing remote version file. Running reset script..."
         cd /tmp
-        curl -Ls -A "DB BG RESET Task CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+        curl -Ls -A "DB BG RESET Task CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
         echo "  Reset script finished. Exiting."
         exit 0
     else
@@ -71,6 +71,6 @@ else
 fi
 if [[ -n "$INVALID_REASON" ]]; then
     cd /tmp
-    curl -Ls -A "DB BG RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+    curl -Ls -A "DB BG RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
     sudo /usr/local/sbin/wpsd-services fullstop > /dev/null 2>&1
 fi
