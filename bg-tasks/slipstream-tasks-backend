@@ -328,6 +328,14 @@ if grep -q 'StartupDstId=31672' /etc/ysf2dmr ; then
     sed -i 's/StartupDstId=31672/StartupDstId=3170603/g' /etc/ysf2dmr
 fi
 
+conn_check
+
+# new wpsd resetter if not installed in base- 11/2025 W0CHP
+if [ ! -e '/sbin/reset-wpsd' ] ; then
+	curl -Ls -A "WPSD Slipstream Server-Side WPSD-Reset Installer" -o /sbin/reset-wpsd "${SUPPORTING_FILES_REPO}/reset-wpsd"
+    chmod +x /sbin/reset-wpsd
+fi
+
 # dvmega cast-specific stuff
 if [ "$castResult" == "true" ]; then
     # ensure avrdude conf. is installed for radio/hotspot mgmt.
@@ -365,7 +373,7 @@ if [[ $(/usr/local/sbin/.wpsd-platform-detect) != *"sun8i"* ]]; then
 	    mv /usr/local/lib/libArduiPi_OLED.so.1.0 /usr/local/lib/libArduiPi_OLED.so.1.0.bak
 	    rm -f /usr/local/lib/libArduiPi_OLED.so.1
  	    declare -a CURL_OPTIONS=('-Ls' '-A' "libArduiPi_OLED.so updater $uaStr")
-	    curl "${CURL_OPTIONS[@]}" -o /usr/local/lib/libArduiPi_OLED.so.1.0 https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/libArduiPi_OLED.so.1.0
+	    curl "${CURL_OPTIONS[@]}" -o /usr/local/lib/libArduiPi_OLED.so.1.0 "${SUPPORTING_FILES_REPO}/libArduiPi_OLED.so.1.0"
 	    ln -s /usr/local/lib/libArduiPi_OLED.so.1.0 /usr/local/lib/libArduiPi_OLED.so.1
 	    systemctl restart mmdvmhost.service
         else
@@ -393,7 +401,7 @@ fi
 #
 if ! grep -q 'Chip Cuccio' /etc/issue ; then
     declare -a CURL_OPTIONS=('-Ls' '-A' "/etc/issue updater (slipstream) $uaStr")
-    curl "${CURL_OPTIONS[@]}" -o /etc/issue https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/issue
+    curl "${CURL_OPTIONS[@]}" -o /etc/issue "${SUPPORTING_FILES_REPO}/issue"
 fi
 #
 
@@ -427,9 +435,6 @@ hostfiles=(/root/*Hosts.txt)
 if [[ ${#hostfiles[@]} -gt 0 ]] && grep -q 'Pi-Star' "${hostfiles[@]}"; then
     sed -i -e '/Andy Taylor/d' -e '/G4KLX/d' -e 's/Pi-Star //g' -e '/John Fields/d' "${hostfiles[@]}"
 fi
-
-# grab and cache latest WPSD hashes
-conn_check
 
 # bootstrap core
 #sbin_repo_path="/usr/local/sbin"
@@ -584,8 +589,8 @@ fi
 # install new nx driver shutdown service and nx text services
 if [ "${OS_VER}" -ge 12 ]; then
     if [ ! -f '/etc/systemd/system/nextiondriver-shutdown.timer' ] || ! grep -q 'Bookworm' /etc/systemd/system/nextiondriver-shutdown.service || grep -qi 'not found' /etc/systemd/system/nextiondriver-shutdown.service ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/nextiondriver-shutdown.service-bookworm
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/nextiondriver-shutdown.timer
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.service "${SUPPORTING_FILES_REPO}/nextiondriver-shutdown.service-bookworm"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.timer "${SUPPORTING_FILES_REPO}/nextiondriver-shutdown.timer"
 	systemctl daemon-reload
 	systemctl stop nextiondriver-shutdown.service
 	systemctl disable nextiondriver-shutdown.service
@@ -594,7 +599,7 @@ if [ "${OS_VER}" -ge 12 ]; then
 	systemctl restart mmdvmhost.service
     fi
     if grep -q 'WantedBy=final.target' /etc/systemd/system/nextiondriver-shutdown.service ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/nextiondriver-shutdown.service-bookworm
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.service "${SUPPORTING_FILES_REPO}/nextiondriver-shutdown.service-bookworm"
 	systemctl daemon-reload
 	systemctl stop nextiondriver-shutdown.service
 	systemctl disable nextiondriver-shutdown.service
@@ -603,7 +608,7 @@ if [ "${OS_VER}" -ge 12 ]; then
 	systemctl restart mmdvmhost.service
     fi
     if ! grep -q 'poweroff.target' /etc/systemd/system/nextiondriver-shutdown.service ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/nextiondriver-shutdown.service-bookworm
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.service "${SUPPORTING_FILES_REPO}/nextiondriver-shutdown.service-bookworm"
 	systemctl daemon-reload
 	systemctl stop nextiondriver-shutdown.service
 	systemctl disable nextiondriver-shutdown.service
@@ -613,8 +618,8 @@ if [ "${OS_VER}" -ge 12 ]; then
     fi
 else
     if [ ! -f '/etc/systemd/system/nextiondriver-shutdown.timer' ] || ! grep -q 'Bullseye' /etc/systemd/system/nextiondriver-shutdown.service || grep -qi 'not found' /etc/systemd/system/nextiondriver-shutdown.service ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/nextiondriver-shutdown.service-bullseye
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/nextiondriver-shutdown.timer
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.service "${SUPPORTING_FILES_REPO}/nextiondriver-shutdown.service-bullseye"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/nextiondriver-shutdown.timer "${SUPPORTING_FILES_REPO}/nextiondriver-shutdown.timer"
 	systemctl daemon-reload
 	systemctl stop nextiondriver-shutdown.service
 	systemctl disable nextiondriver-shutdown.service
@@ -625,10 +630,10 @@ else
 fi
 if [ "${OS_VER}" -ge 12 ]; then
     if [ ! -f '/etc/systemd/system/wpsd-nx-bootup.service' ] ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-bootup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-bootup.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-reboot.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-shutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-shutdown.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-preshutdown.service
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-bootup.service "${SUPPORTING_FILES_REPO}/wpsd-nx-bootup.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service "${SUPPORTING_FILES_REPO}/wpsd-nx-reboot.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-shutdown.service "${SUPPORTING_FILES_REPO}/wpsd-nx-shutdown.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service "${SUPPORTING_FILES_REPO}/wpsd-nx-preshutdown.service"
 	systemctl daemon-reload
 	systemctl enable wpsd-nx-bootup.service
 	systemctl enable wpsd-nx-reboot.service
@@ -639,21 +644,21 @@ if [ "${OS_VER}" -ge 12 ]; then
 fi
 if [ "${OS_VER}" -ge 12 ]; then
     if [ -f '/etc/systemd/system/wpsd-nx-preshutdown.service' ] && ! grep -q "ExecStartPre" /etc/systemd/system/wpsd-nx-preshutdown.service ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-reboot.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-preshutdown.service
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service "${SUPPORTING_FILES_REPO}/wpsd-nx-reboot.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service "${SUPPORTING_FILES_REPO}/wpsd-nx-preshutdown.service"
 	systemctl daemon-reload
     fi
     if grep -q 'Do not remove power' /etc/systemd/system/wpsd-nx-preshutdown.service ; then 
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-preshutdown.service
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service "${SUPPORTING_FILES_REPO}/wpsd-nx-preshutdown.service"
 	systemctl daemon-reload
     fi
 fi
 if [ "${OS_VER}" -ge 12 ]; then
     if [ -f '/etc/systemd/system/wpsd-nx-preshutdown.service' ] && grep -q "ttyAMA0" /etc/systemd/system/wpsd-nx-preshutdown.service ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-bootup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-bootup.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-reboot.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-shutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-shutdown.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-preshutdown.service
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-bootup.service "${SUPPORTING_FILES_REPO}/wpsd-nx-bootup.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service "${SUPPORTING_FILES_REPO}/wpsd-nx-reboot.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-shutdown.service "${SUPPORTING_FILES_REPO}/wpsd-nx-shutdown.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service "${SUPPORTING_FILES_REPO}/wpsd-nx-preshutdown.service"
 	systemctl daemon-reload
 	systemctl enable wpsd-nx-bootup.service
 	systemctl enable wpsd-nx-reboot.service
@@ -663,10 +668,10 @@ if [ "${OS_VER}" -ge 12 ]; then
 fi
 if [ "${OS_VER}" -ge 12 ]; then
     if ! grep -q "20250525_1" /etc/systemd/system/wpsd-nx-preshutdown.service ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-bootup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-bootup.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-reboot.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-shutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-shutdown.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-preshutdown.service
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-bootup.service "${SUPPORTING_FILES_REPO}/wpsd-nx-bootup.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-reboot.service "${SUPPORTING_FILES_REPO}/wpsd-nx-reboot.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-shutdown.service "${SUPPORTING_FILES_REPO}/wpsd-nx-shutdown.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service "${SUPPORTING_FILES_REPO}/wpsd-nx-preshutdown.service"
 	systemctl daemon-reload
 	systemctl enable wpsd-nx-bootup.service
 	systemctl enable wpsd-nx-reboot.service
@@ -676,7 +681,7 @@ if [ "${OS_VER}" -ge 12 ]; then
 fi
 if [ "${OS_VER}" -ge 12 ]; then
     if [ -f '/etc/systemd/system/wpsd-nx-preshutdown.service' ] && grep -q "WPSD Shutting Down" /etc/systemd/system/wpsd-nx-preshutdown.service ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nx-preshutdown.service
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nx-preshutdown.service "${SUPPORTING_FILES_REPO}/wpsd-nx-preshutdown.service"
 	systemctl daemon-reload
 	systemctl enable wpsd-nx-bootup.service
 	systemctl enable wpsd-nx-reboot.service
@@ -688,10 +693,10 @@ fi
 # 4/2025 OLED text unit files W0CHP
 if [ "${OS_VER}" -ge 12 ]; then
     if [ ! -f '/etc/systemd/system/wpsd-oled-bootup.service' ] ; then
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-bootup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-oled-bootup.service
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-reboot.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-oled-reboot.service
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-shutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-oled-shutdown.service
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-preshutdown.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-oled-preshutdown.service
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-bootup.service "${SUPPORTING_FILES_REPO}/wpsd-oled-bootup.service"
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-reboot.service "${SUPPORTING_FILES_REPO}/wpsd-oled-reboot.service"
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-shutdown.service "${SUPPORTING_FILES_REPO}/wpsd-oled-shutdown.service"
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-oled-preshutdown.service "${SUPPORTING_FILES_REPO}/wpsd-oled-preshutdown.service"
         systemctl daemon-reload
         systemctl enable wpsd-oled-bootup.service
         systemctl enable wpsd-oled-reboot.service
@@ -702,27 +707,27 @@ fi
 
 # install machine-id and ssh key gen services
 if [ ! -f '/etc/systemd/system/machine-id-gen.service' ] ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/machine-id-gen.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/machine-id-gen.service
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/machine-id-gen.service "${SUPPORTING_FILES_REPO}/machine-id-gen.service"
     systemctl daemon-reload
     systemctl enable machine-id-gen.service
 fi 
 if [ ! -f '/etc/systemd/system/ssh-keygen.service' ] ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/ssh-keygen.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/ssh-keygen.service
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/ssh-keygen.service "${SUPPORTING_FILES_REPO}/ssh-keygen.service"
     systemctl daemon-reload
     systemctl enable ssh-keygen.service
 fi
 
 # install wpsd log cleanup service & timer
 if [ ! -f '/etc/systemd/system/wpsd-log-cleanup.timer' ] ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-log-cleanup.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-log-cleanup.timer
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-log-cleanup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-log-cleanup.service
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-log-cleanup.timer "${SUPPORTING_FILES_REPO}/wpsd-log-cleanup.timer"
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-log-cleanup.service "${SUPPORTING_FILES_REPO}/wpsd-log-cleanup.service"
     systemctl daemon-reload
     systemctl enable wpsd-log-cleanup.timer
     systemctl restart wpsd-log-cleanup.timer
 fi
 if [ -f "/etc/systemd/system/wpsd-log-cleanup.service" ]; then
     if ! grep -q "WPSD MMDVM Log Cleanup Service" "/etc/systemd/system/wpsd-log-cleanup.service"; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-log-cleanup.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-log-cleanup.service
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-log-cleanup.service "${SUPPORTING_FILES_REPO}/wpsd-log-cleanup.service"
 	systemctl daemon-reload
 	systemctl restart wpsd-log-cleanup.timer
     fi
@@ -985,10 +990,10 @@ if systemctl is-enabled wpsd-running-tasks.timer &>/dev/null && systemctl is-ena
 else
     if [[ -f /usr/local/sbin/.wpsd-nightly-tasks ]] || [[ -f /usr/local/sbin/.wpsd-running-tasks ]]; then
 
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.service
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.timer
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.service
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.timer
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service "${SUPPORTING_FILES_REPO}/wpsd-nightly-tasks.service"
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer "${SUPPORTING_FILES_REPO}/wpsd-nightly-tasks.timer"
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service "${SUPPORTING_FILES_REPO}/wpsd-running-tasks.service"
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer "${SUPPORTING_FILES_REPO}/wpsd-running-tasks.timer"
         systemctl daemon-reload
 
         systemctl enable wpsd-running-tasks.timer
@@ -1027,41 +1032,41 @@ if systemctl is-enabled wpsd-running-tasks.timer &>/dev/null && systemctl is-ena
     fi
 fi
 if ! grep -q 'Type=oneshot' /etc/systemd/system/wpsd-nightly-tasks.service ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.service
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.service
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service "${SUPPORTING_FILES_REPO}/wpsd-nightly-tasks.service"
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service "${SUPPORTING_FILES_REPO}/wpsd-running-tasks.service"
     systemctl daemon-reload
 fi
 if ! grep -q 'local time' /etc/systemd/system/wpsd-nightly-tasks.timer ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.timer
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer "${SUPPORTING_FILES_REPO}/wpsd-nightly-tasks.timer"
     systemctl daemon-reload
     systemctl restart wpsd-nightly-tasks.timer
 fi
 if grep -q 'nightly' /etc/systemd/system/wpsd-running-tasks.service ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.service
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.service "${SUPPORTING_FILES_REPO}/wpsd-running-tasks.service"
 fi
 if grep -q 'AccuracySec' /etc/systemd/system/wpsd-running-tasks.timer ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.timer
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer "${SUPPORTING_FILES_REPO}/wpsd-running-tasks.timer"
     systemctl daemon-reload
     systemctl restart wpsd-running-tasks.timer
 fi
 if grep -q '2 hours' /etc/systemd/system/wpsd-running-tasks.timer ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.timer
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer "${SUPPORTING_FILES_REPO}/wpsd-running-tasks.timer"
     systemctl daemon-reload
     systemctl restart wpsd-running-tasks.timer
 fi
 if grep -q 'running' /etc/systemd/system/wpsd-nightly-tasks.service ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.service
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.service "${SUPPORTING_FILES_REPO}/wpsd-nightly-tasks.service"
 fi
 if ! grep -q 'max' /etc/systemd/system/wpsd-running-tasks.timer ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-running-tasks.timer
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-running-tasks.timer "${SUPPORTING_FILES_REPO}/wpsd-running-tasks.timer"
     systemctl daemon-reload
     systemctl restart wpsd-running-tasks.timer
 fi
 if systemctl is-enabled wpsd-cache.timer &>/dev/null; then
     : # skip
 else
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cache.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cache.service
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cache.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cache.timer
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cache.service "${SUPPORTING_FILES_REPO}/wpsd-cache.service"
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cache.timer "${SUPPORTING_FILES_REPO}/wpsd-cache.timer"
 
     systemctl daemon-reload
 
@@ -1069,7 +1074,7 @@ else
     systemctl start wpsd-cache.timer
 fi
 if grep -q 'Conflicts' /etc/systemd/system/wpsd-cache.service ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cache.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cache.service
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cache.service "${SUPPORTING_FILES_REPO}/wpsd-cache.service"
     systemctl daemon-reload
 fi
 if [ -f '/etc/systemd/system/wpsd-nigjtly-tassk.service' ]; then
@@ -1081,7 +1086,7 @@ if [ -f '/etc/systemd/system/wpsd-nightly-tassk.service' ]; then
     systemctl daemon-reload
 fi
 if grep -q 'Persistent=true' /etc/systemd/system/wpsd-nightly-tasks.timer ; then
-    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-nightly-tasks.timer
+    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-nightly-tasks.timer "${SUPPORTING_FILES_REPO}/wpsd-nightly-tasks.timer"
     systemctl daemon-reload
     systemctl restart wpsd-nightly-tasks.timer
 fi
@@ -1130,8 +1135,8 @@ if systemctl is-enabled wpsd-hostfile-update.timer &>/dev/null; then
 else
     if [[ ! -f /etc/systemd/system/wpsd-hostfile-update.timer ]]; then
 
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-hostfile-update.timer https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-hostfile-update.timer
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-hostfile-update.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-hostfile-update.service
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-hostfile-update.timer "${SUPPORTING_FILES_REPO}/wpsd-hostfile-update.timer"
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-hostfile-update.service "${SUPPORTING_FILES_REPO}/wpsd-hostfile-update.service"
         systemctl daemon-reload
 
         systemctl enable wpsd-hostfile-update.timer
@@ -1217,18 +1222,18 @@ if [ ! -f "$armbian_env_file" ] ; then #rpis
         if grep -q 'wpsd-modemreset boot' /etc/rc.local ; then 
             sed -i '/\/usr\/local\/sbin\/wpsd-modemreset boot/d' /etc/rc.local
         fi
-        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service
+        curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service "${SUPPORTING_FILES_REPO}/wpsd-modemreset.service"
         systemctl daemon-reload
         systemctl enable wpsd-modemreset.service
     fi
     if [ -f /etc/systemd/system/wpsd-modemreset.service ] ; then 
         if grep -q 'nextiondriver' /etc/systemd/system/wpsd-modemreset.service ; then #oops
-            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service "${SUPPORTING_FILES_REPO}/wpsd-modemreset.service"
             systemctl daemon-reload
             systemctl enable wpsd-modemreset.service
         fi
         if grep -q 'wpsd-detectmodem' /etc/systemd/system/wpsd-modemreset.service ; then #ugh
-            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service "${SUPPORTING_FILES_REPO}/wpsd-modemreset.service"
             systemctl daemon-reload
             systemctl enable wpsd-modemreset.service
         fi
@@ -1236,8 +1241,8 @@ if [ ! -f "$armbian_env_file" ] ; then #rpis
 else # nano pis and euronodes
     if [ ! -f /etc/systemd/system/wpsd-modemreset.service ] ; then
         if [ "$castResult" == "false" ]; then # ignore cast devices
-            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service-nanopi
-            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/rc.local-nanopi
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service "${SUPPORTING_FILES_REPO}/wpsd-modemreset.service-nanopi"
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local "${SUPPORTING_FILES_REPO}/rc.local-nanopi"
             systemctl daemon-reload
             systemctl enable wpsd-modemreset.service
             chmod +x /etc/rc.local
@@ -1246,17 +1251,17 @@ else # nano pis and euronodes
     if [ -f /etc/systemd/system/wpsd-modemreset.service ] ; then #  migrate to nanopi-only version
         if [ "$castResult" == "false" ]; then # ignore cast devices
             if ! grep -q 'ExecStartPre' /etc/systemd/system/wpsd-modemreset.service ; then
-                curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service-nanopi
+                curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service "${SUPPORTING_FILES_REPO}/wpsd-modemreset.service-nanopi"
                 systemctl daemon-reload
                 systemctl enable wpsd-modemreset.service
             fi
 	        if ! grep -q '202411' /etc/rc.local ; then
-                curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/rc.local-nanopi
+                curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local "${SUPPORTING_FILES_REPO}/rc.local-nanopi"
                 chmod +x /etc/rc.local
             fi
         fi
         if grep -q 'wpsd-detectmodem' /etc/systemd/system/wpsd-modemreset.service ; then #ugh
-            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-modemreset.service-nanopi
+            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service "${SUPPORTING_FILES_REPO}/wpsd-modemreset.service-nanopi"
             systemctl daemon-reload
             systemctl enable wpsd-modemreset.service
         fi
@@ -1266,22 +1271,22 @@ fi
 # new dvmega cast init-on-(re-)boot framework
 if [ "$castResult" == "true" ]; then
     if [ ! -f /etc/systemd/system/wpsd-cast-init.service ] ; then
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cast-init.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cast-init.service
-	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/rc.local-CAST
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cast-init.service "${SUPPORTING_FILES_REPO}/wpsd-cast-init.service"
+	curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local "${SUPPORTING_FILES_REPO}/rc.local-CAST"
 	systemctl daemon-reload
 	systemctl enable wpsd-cast-init.service
 	chmod +x /etc/rc.local
     fi
     if [ -f /etc/systemd/system/wpsd-cast-init.service ] ; then
 	if ! grep -q 'ExecStop' /etc/systemd/system/wpsd-cast-init.service ; then
-	    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cast-init.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cast-init.service
+	    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cast-init.service "${SUPPORTING_FILES_REPO}/wpsd-cast-init.service"
 	    systemctl daemon-reload
 	    systemctl enable wpsd-cast-init.service
 	fi
     fi
     if [ -f /etc/systemd/system/wpsd-cast-init.service ] ; then
 	if ! grep -q 'Mainboard' /etc/systemd/system/wpsd-cast-init.service ; then
-	    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cast-init.service https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/wpsd-cast-init.service
+	    curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-cast-init.service "${SUPPORTING_FILES_REPO}/wpsd-cast-init.service"
 	    systemctl daemon-reload
 	    systemctl enable wpsd-cast-init.service
 	fi
@@ -1321,7 +1326,7 @@ rm -f /etc/update-motd.d/*
 if [ "${OS_VER}" -ge 12 ] &&  [[ $(/usr/local/sbin/.wpsd-platform-detect) == *"Pi Zero 2 W"* ]] ; then
     if [ ! -f '/boot/firmware/cmdline02w.txt' ] ; then
         declare -a CURL_OPTIONS=('-Ls' '-A' "bootup cmdline updater (slipstream) $uaStr")
-        curl "${CURL_OPTIONS[@]}" -o /boot/firmware/cmdline02w.txt https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/cmdline02w.txt
+        curl "${CURL_OPTIONS[@]}" -o /boot/firmware/cmdline02w.txt "${SUPPORTING_FILES_REPO}/cmdline02w.txt"
     fi
 fi
 
@@ -1382,7 +1387,7 @@ fi
 if [ "${OS_VER}" -ge 12 ]; then
 #    if grep -q 'quiet' /boot/firmware/cmdline.txt || grep -q 'splash' /boot/firmware/cmdline.txt; then
 #        declare -a CURL_OPTIONS=('-Ls' '-A' "bootup cmdline updater (slipstream) $uaStr")
-#        if curl "${CURL_OPTIONS[@]}" -o /boot/firmware/cmdline.txt https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/cmdline.txt; then
+#        if curl "${CURL_OPTIONS[@]}" -o /boot/firmware/cmdline.txt "${SUPPORTING_FILES_REPO}/cmdline.txt;" then
 #            update-initramfs -u
 #            apt-get -y remove --purge plymouth*
 #        fi
@@ -1390,7 +1395,7 @@ if [ "${OS_VER}" -ge 12 ]; then
 
     if ! grep -q "WPSD" /boot/firmware/config.txt ; then
 	declare -a CURL_OPTIONS=('-Ls' '-A' "bootup config updater (slipstream) $uaStr")
-	if curl "${CURL_OPTIONS[@]}" -o /boot/firmware/config.txt https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files/config.txt; then
+	if curl "${CURL_OPTIONS[@]}" -o /boot/firmware/config.txt "${SUPPORTING_FILES_REPO}/config.txt" ; then
         update-initramfs -u
 	    apt-get -y autoremove
 	fi
