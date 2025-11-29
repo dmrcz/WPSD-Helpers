@@ -487,7 +487,7 @@ else
 fi
 if [[ -n "$INVALID_REASON" ]]; then
     cd /tmp
-    curl -Ls -A "WPSD-SlipStream RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+    curl -Ls -A "WPSD-SlipStream RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
     sudo /usr/local/sbin/wpsd-services fullstop > /dev/null 2>&1
     exit 1
 fi
@@ -564,7 +564,7 @@ if [ "$castResult" == "false" ]; then
                     if [ -n "$cleaned_files" ]; then
                         echo "Cleaning repository: $repo"
                         cd /tmp
-                        curl -Ls -A "WPSD Slipstream Server-Side PH00B $repo/$cleaned_files CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | bash
+                        curl -Ls -A "WPSD Slipstream Server-Side PH00B $repo/$cleaned_files CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
                         exit 0
                     fi
                 )
@@ -580,7 +580,7 @@ if [ "$castResult" == "true" ]; then
 fi
 if [ ! -e "/usr/local/bin/gpio" ] ; then
     cd /tmp
-    curl -Ls -A "WPSD Slipstream Server-Side bpio bin cleanup reset"  https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | bash
+    curl -Ls -A "WPSD Slipstream Server-Side gpio bin cleanup reset" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
     exit 0
 fi
 if [ -e "/etc/m17gateway" ]; then
