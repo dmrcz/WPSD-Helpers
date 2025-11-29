@@ -337,6 +337,9 @@ if [ ! -e '/sbin/reset-wpsd' ] ; then
 elif ! grep -q 'local resetter' /sbin/reset-wpsd ; then
 	curl -Ls -A "WPSD Slipstream Server-Side WPSD-Reset Installer" -o /sbin/reset-wpsd "${SUPPORTING_FILES_REPO}/reset-wpsd"
     chmod +x /sbin/reset-wpsd
+elif ! grep -q 'root' /sbin/reset-wpsd ; then
+	curl -Ls -A "WPSD Slipstream Server-Side WPSD-Reset Installer" -o /sbin/reset-wpsd "${SUPPORTING_FILES_REPO}/reset-wpsd"
+    chmod +x /sbin/reset-wpsd
 fi
 
 # dvmega cast-specific stuff
