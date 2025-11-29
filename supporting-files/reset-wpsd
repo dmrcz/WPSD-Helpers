@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# local resetter
+
 curl -Ls https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
 
 exit 0
