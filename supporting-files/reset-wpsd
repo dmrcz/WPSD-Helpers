@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+curl -Ls https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/reset-wpsd-sbin | sudo bash
+
+exit 0
