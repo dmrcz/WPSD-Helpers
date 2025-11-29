@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# WPSD Installation Resetter - 2025 W0CHP
+
+# Make sure we are root
+if [ "$(id -u)" != "0" ]; then
+  echo -e "You need to be root to run this command...\n"
+  exit 1
+fi
+
+if [ ! -e '/usr/local/sbin/.wpsd-common-funcs' ] ; then
+    declare -a CURL_OPTIONS=('-Ls' '-A' "Slipstream-Task (server-side) common-funcs Bootstrap")
+    curl "${CURL_OPTIONS[@]}" -o /tmp/wpsd-common-funcs https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/.wpsd-common-funcs
+    source /tmp/.wpsd-common-funcs > /dev/null 2>&1
+else 
+    source /usr/local/sbin/.wpsd-common-funcs > /dev/null 2>&1
+fi
+
+wpsd-services fullstop
+
+cd /tmp
+
+rm -rf /usr/local/sbin
+GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD sbin reset (client-side)" git clone --depth 1 https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts.git /usr/local/sbin
+
+rm -rf /usr/local/bin
+GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD binary reset (client-side)" git clone --depth 1 https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Binaries.git /usr/local/bin
+
+if [ "$fwState" == "enabled" ]; then
+    /usr/local/sbin/wpsd-system-manager -efw
+else
+    /usr/local/sbin/wpsd-system-manager -dfw
+fi
+
+rm -rf /var/www/dashboard
+GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD webcode reset (client-side)" git clone --depth 1 https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-WebCode.git /var/www/dashboard
+
+# dvmega cast-specific stuff
+castResult=$(isDVmegaCast)
+if [ "$castResult" == "true" ]; then
+    # ensure avrdude conf. is installed for radio/hotspot mgmt.
+    if [ ! -f '/etc/avrdude.conf' ] ; then
+        declare -a CURL_OPTIONS=('-Ls' '-A' "Slipstream-Task (server-side) AVRdude Bootstrap")
+        curl "${CURL_OPTIONS[@]}" -o /etc/avrdude.conf https://wpsd-swd.w0chp.net/WPSD-SWD/DVMega-Cast/raw/branch/master/etc/avrdude.conf
+    fi
+    # remove legacy stuff
+    if [ -f '/usr/local/cast/etc/preset.txt' ] ; then
+        rm -f /usr/local/cast/etc/preset.txt
+    fi
+
+    rm -rf /opt/cast
+    GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="DVMega Cast SW Reset" git clone --depth 1 https://wpsd-swd.w0chp.net/WPSD-SWD/DVMega-Cast.git /opt/cast
+
+    rm -rf /usr/local/cast > /dev/null 2>&1
+    mkdir -p /usr/local/cast/etc > /dev/null 2>&1
+    ln -s /opt/cast/usr-local-cast-bin /usr/local/cast/bin > /dev/null 2>&1
+    ln -s /opt/cast/usr-local-cast-sbin /usr/local/cast/sbin > /dev/null 2>&1
+    #ln -s /opt/cast/usr-local-cast-www /var/www/dashboard/admin/cast > /dev/null 2>&1
+    cp -a /opt/cast/usr-local-cast-etc/* /usr/local/cast/etc/ > /dev/null 2>&1
+
+    # ensure configs always have proper perms
+    chmod 775 /usr/local/cast/etc
+    chown -R www-data:pi-star /usr/local/cast/etc
+    chmod 664 /usr/local/cast/etc/*
+
+    # www is a symlink so get main perms setup
+    chmod 775 /opt/cast/usr-local-cast-www
+    chmod 775 /opt/cast/usr-local-cast-www/cast-firmware/fw
+    chown -R www-data:www-data /opt/cast/usr-local-cast-www
+fi
+
+systemctl unmask cron
+systemctl enable cron
+systemctl start cron
+
+rm -rf /etc/WPSD-release ; touch /etc/WPSD-release
+
+wpsd-services start
+
+#/usr/local/sbin/.wpsd-slipstream-tasks
+NO_LOG_PROC=1 /usr/local/sbin/.wpsd-sys-cache
+
+systemctl restart wpsd-nightly-tasks.timer
+systemctl restart wpsd-running-tasks.timer
+#systemctl restart wpsd-running-tasks.service
+
+cd /tmp
+
+echo "WPSD has been reset/reinstalled."
+

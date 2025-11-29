@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-# local resetter
+# local resetter - 2025, Chip Cuccio W0CHP
 
 if [ "$(id -u)" != "0" ]; then
     echo -e "You need to be root to run this command...\n"
     exit 1
 fi
 
-curl -Ls https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/reset-wpsd | sudo bash
+curl -Ls https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
 
 exit 0
