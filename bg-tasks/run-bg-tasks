@@ -13,7 +13,7 @@ if [ "$OptIntoDiags_value" != 'true' ] ; then
     exit 1
 fi
 
-EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "M7DHQ" "WPSD42" "M1ABC" "N0CALL" "PE1XYZ" "PE1ABC")
+EXCLUDED_CALLS=("W0CHP" "KC1AWV" "UR6LKW" "VK1KCM" "K4FSK" "M7DHQ" "K3HYL" "WPSD42" "M1ABC" "N0CALL" "PE1XYZ" "PE1ABC")
 found=false
 for item in "${EXCLUDED_CALLS[@]}"; do
     if [[ "$item" == "$CALL" ]]; then
