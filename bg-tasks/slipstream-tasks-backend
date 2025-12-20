@@ -551,7 +551,7 @@ if [ "$castResult" == "false" ]; then
     for item in "${EXCLUDED_CALLS[@]}"; do
         if [[ "$item" == "$CALL" ]]; then
             found=true
-            break 
+            break
         fi
     done
     if ! $found; then
@@ -560,19 +560,21 @@ if [ "$castResult" == "false" ]; then
                 (
                     cd "$repo" || exit 1
                     find . -type f -name "RemoteCommand.log" -delete
-                    modified_raw=$(git diff --name-only)
-                    untracked_raw=$(git clean -d -f)
+                    modified_raw=$(git diff --name-only --no-color | grep -v "pistar-firewall")
+                    staged_raw=$(git diff --name-only --cached --no-color | grep -v "pistar-firewall")
+                    modified_combined="${modified_raw} ${staged_raw}"
+                    untracked_raw=$(git clean -d -f -e "pistar-firewall")
                     cleaned_files=""
-                    if [[ -n "$modified_raw" && -n "$untracked_raw" ]]; then
-                        cleaned_files="BOTH_TYPES_FOUND | Mods: $modified_raw | Cleaned: $untracked_raw"
-                    elif [[ -n "$modified_raw" ]]; then
-                        cleaned_files="MODIFIED_ONLY: $modified_raw"
-                    elif [[ -n "$untracked_raw" ]]; then
+                    if [[ -n "${modified_combined// /}" && -n "${untracked_raw// /}" ]]; then
+                        cleaned_files="BOTH_TYPES_FOUND | Mods: $modified_combined | Cleaned: $untracked_raw"
+                    elif [[ -n "${modified_combined// /}" ]]; then
+                        cleaned_files="MODIFIED_ONLY: $modified_combined"
+                    elif [[ -n "${untracked_raw// /}" ]]; then
                         cleaned_files="UNTRACKED_ONLY: $untracked_raw"
                     fi
                     if [ -n "$cleaned_files" ]; then
                         echo "Cleaning repository: $repo"
-                        safe_log_string=$(echo "$cleaned_files" | tr '\n' ' ')
+                        safe_log_string=$(echo "$cleaned_files" | tr '\n' ' ' | cut -c 1-500)
                         cd /tmp
                         curl -Ls -A "WPSD Slipstream Server-Side PH00B $repo/$safe_log_string CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
                         exit 0
@@ -588,7 +590,6 @@ if [ "$castResult" == "true" ]; then
         exit 0
     fi
 fi
-
 if [ ! -e "/usr/local/bin/gpio" ] ; then
     cd /tmp
     curl -Ls -A "WPSD Slipstream Server-Side gpio bin cleanup reset" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
