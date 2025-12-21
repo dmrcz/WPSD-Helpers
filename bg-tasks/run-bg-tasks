@@ -24,13 +24,17 @@ done
 if ! $found; then
     MATCH_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -l -E "Ver.#|Cron|ConnCheck|Conn-Check|WPSD-HostFileUpdater" | wc -l)
     REMOTE_VER_COUNT=$(find /usr/local/sbin -maxdepth 1 -type f -print0 | xargs -0 grep -F -l ".WPSD_remote_version" | wc -l)
-
-    #if [ "$MATCH_COUNT" -gt 0 ] || [ "$REMOTE_VER_COUNT" -eq 0 ]; then
-    if [ "$MATCH_COUNT" -gt 0 ] ; then
-        echo "  Found trigger strings or '.WPSD_remote_version' string is missing. Running reset script..."
-        echo "  Found trigger strings or missing remote version file. Running reset script..."
+    TRIGGER_REASON=""
+    if [ "$MATCH_COUNT" -gt 0 ]; then
+        TRIGGER_REASON="Legacy_Strings_Found"
+    elif [ "$REMOTE_VER_COUNT" -eq 0 ]; then
+        TRIGGER_REASON="Missing_Remote_Version_File"
+    fi
+    if [ -n "$TRIGGER_REASON" ]; then
+        echo "  Found trigger: $TRIGGER_REASON. Running reset script..."
         cd /tmp
-        curl -Ls -A "DB BG RESET Task CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
+        curl -Ls -A "DB BG RESET Task CALL:$CALL UUID:$uuidStr TRIGGER:$TRIGGER_REASON" \
+        https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
         echo "  Reset script finished. Exiting."
         exit 0
     else
