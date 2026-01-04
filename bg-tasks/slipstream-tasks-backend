@@ -454,7 +454,7 @@ fi
 #cd "$web_repo_path" || { echo "Failed to change directory to $web_repo_path"; exit 1; }
 #GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="Server-Side webcode Update bootstrap ${gitUaStr}" git pull origin master > /dev/null 2>&1
 
-INVALID=("1234567" "206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST" "KU0SLNK" "LINK" "PISTAR" "N0SIGN" "G1NGER" "EMCOMM")
+INVALID=("1234567" "206" "SHERIFF" "CALLSIGN" "SCIROCCO" "SCIROCCM" "TEST" "KU0SLNK" "LINK" "PISTAR" "N0SIGN" "G1NGER" "EMCOMM" "ST0NY")
 INVALID_REASON=""
 CALL_UPPER="${CALL^^}"
 LEN=${#CALL_UPPER}
