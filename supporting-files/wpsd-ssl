@@ -1,0 +1,28 @@
+server {
+	listen 80 default_server;
+	listen [::]:80;
+	listen 443 ssl http2;
+	listen [::]:443 ssl http2;
+	root /var/www/dashboard;
+
+	ssl_certificate /etc/ssl/certs/wpsd.crt;
+	ssl_certificate_key /etc/ssl/private/wpsd.key;
+	ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
+
+	location ^~ /admin {
+	try_files $uri $uri/ =404;
+		auth_basic "Restricted";
+		auth_basic_user_file /var/www/.htpasswd;
+		client_max_body_size 512K;
+
+		# Load the defaults
+		include	/etc/nginx/default.d/php.conf;
+	}
+
+	location ~ /\.git {
+		deny all;
+	}
+
+	# Load the defaults
+	include	/etc/nginx/default.d/*.conf;
+}

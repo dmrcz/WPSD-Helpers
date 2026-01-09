@@ -1519,7 +1519,14 @@ fi
 
 # legacy cleanups - 1/2026
 if grep -q 'ConfUpdReqd' /etc/WPSD-release ; then
-	    sed -i '/ConfUpdReqd/d' /etc/WPSD-release 
+    sed -i '/ConfUpdReqd/d' /etc/WPSD-release 
+fi
+
+# install missing wpsd-ssl nginx vhost on trixie
+if [ "${OS_VER}" -eq 13 ]; then
+    if [ ! -f '/etc/nginx/sites-available/wpsd-ssl' ] ; then
+	curl -Ls -A "WPSD Slipstream Server-Side WPSD nginx-SSL Installer" -o /etc/nginx/sites-available/wpsd-ssl "${SUPPORTING_FILES_REPO}/wpsd-ssl"
+    fi
 fi
 
 exit 0
