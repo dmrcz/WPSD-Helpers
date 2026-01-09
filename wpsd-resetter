@@ -16,8 +16,8 @@ else
     source /usr/local/sbin/.wpsd-common-funcs > /dev/null 2>&1
 fi
 
-chattr -R -i /usr/local
-chattr -R -i /var/www
+chattr -R -i /usr/local > /dev/null 2>&1
+chattr -R -i /var/www > /dev/null 2>&1
 
 wpsd-services fullstop
 
