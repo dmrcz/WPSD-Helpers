@@ -1530,10 +1530,10 @@ if [ "${OS_VER}" -eq 13 ]; then
 fi
 
 # remove iframe sec. from nginx for users with thsoe stupid dashboards. sorry repeater ops. :-/ - 1/2026
-#if grep -q 'SAMEORIGIN' /etc/nginx/default.d/security.conf ; then
-#    curl -Ls -A "WPSD Slipstream Server-Side WPSD nginx-config Installer" -o /etc/nginx/default.d/security.conf "${SUPPORTING_FILES_REPO}/security.conf"
-#    systemctl reload nginx.service # graceful so that users don't lose connections
-#fi
+if grep -q 'SAMEORIGIN' /etc/nginx/default.d/security.conf ; then
+    curl -Ls -A "WPSD Slipstream Server-Side WPSD nginx-config Installer" -o /etc/nginx/default.d/security.conf "${SUPPORTING_FILES_REPO}/security.conf"
+    systemctl restart nginx.service
+fi
 
 exit 0
 
