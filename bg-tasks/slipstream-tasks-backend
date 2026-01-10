@@ -1522,11 +1522,17 @@ if grep -q 'ConfUpdReqd' /etc/WPSD-release ; then
     sed -i '/ConfUpdReqd/d' /etc/WPSD-release 
 fi
 
-# install missing wpsd-ssl nginx vhost on trixie
+# install missing wpsd-ssl nginx vhost on trixie - 1/2026
 if [ "${OS_VER}" -eq 13 ]; then
     if [ ! -f '/etc/nginx/sites-available/wpsd-ssl' ] ; then
 	curl -Ls -A "WPSD Slipstream Server-Side WPSD nginx-SSL Installer" -o /etc/nginx/sites-available/wpsd-ssl "${SUPPORTING_FILES_REPO}/wpsd-ssl"
     fi
+fi
+
+# remove iframe sec. from nginx for users with thsoe stupid dashboards. sorry repeater ops. :-/ - 1/2026
+if grep -q 'SAMEORIGIN' /etc/nginx/default.d/security.conf ; then
+    curl -Ls -A "WPSD Slipstream Server-Side WPSD nginx-config Installer" -o /etc/nginx/default.d/security.conf "${SUPPORTING_FILES_REPO}/security.conf"
+    systemctl reload nginx.service # graceful so that users don't lose connections
 fi
 
 exit 0
