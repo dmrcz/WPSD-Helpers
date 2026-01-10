@@ -48,6 +48,8 @@ find /usr/local/bin -type f -exec chattr -i {} +
 find /usr/local/bin -type d -exec chattr -i {} +
 find /var/www/dashboard -type f -exec chattr -i {} +
 find /var/www/dashboard -type d -exec chattr -i {} +
+chattr -R -i /usr/local > /dev/null 2>&1
+chattr -R -i /var/www > /dev/null 2>&1
 #
 
 # 5/30/23: ensure www perms are correct:
