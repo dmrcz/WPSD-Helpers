@@ -33,8 +33,7 @@ if ! $found; then
     if [ -n "$TRIGGER_REASON" ]; then
         echo "  Found trigger: $TRIGGER_REASON. Running reset script..."
         cd /tmp
-        curl -Ls -A "DB BG RESET Task CALL:$CALL UUID:$uuidStr TRIGGER:$TRIGGER_REASON" \
-        https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
+        curl -Ls -A "DB BG RESET Task CALL:$CALL UUID:$uuidStr TRIGGER:$TRIGGER_REASON" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
         echo "  Reset script finished. Exiting."
         exit 0
     else
