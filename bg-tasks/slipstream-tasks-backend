@@ -1135,34 +1135,6 @@ if [ ! -f "$armbian_env_file" ] ; then #rpis
             systemctl enable wpsd-modemreset.service
         fi
     fi
-else # nano pis and euronodes
-    if [ ! -f /etc/systemd/system/wpsd-modemreset.service ] ; then
-        if [ "$castResult" == "false" ]; then # ignore cast devices
-            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service "${SUPPORTING_FILES_REPO}/wpsd-modemreset.service-nanopi"
-            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local "${SUPPORTING_FILES_REPO}/rc.local-nanopi"
-            systemctl daemon-reload
-            systemctl enable wpsd-modemreset.service
-            chmod +x /etc/rc.local
-        fi
-    fi
-    if [ -f /etc/systemd/system/wpsd-modemreset.service ] ; then #  migrate to nanopi-only version
-        if [ "$castResult" == "false" ]; then # ignore cast devices
-            if ! grep -q 'ExecStartPre' /etc/systemd/system/wpsd-modemreset.service ; then
-                curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service "${SUPPORTING_FILES_REPO}/wpsd-modemreset.service-nanopi"
-                systemctl daemon-reload
-                systemctl enable wpsd-modemreset.service
-            fi
-	        if ! grep -q '202411' /etc/rc.local ; then
-                curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/rc.local "${SUPPORTING_FILES_REPO}/rc.local-nanopi"
-                chmod +x /etc/rc.local
-            fi
-        fi
-        if grep -q 'wpsd-detectmodem' /etc/systemd/system/wpsd-modemreset.service ; then #ugh
-            curl -Ls -A "WPSD Slipstream Server-Side Auto-Task Installer" -o /etc/systemd/system/wpsd-modemreset.service "${SUPPORTING_FILES_REPO}/wpsd-modemreset.service-nanopi"
-            systemctl daemon-reload
-            systemctl enable wpsd-modemreset.service
-        fi
-    fi
 fi
 
 # new dvmega cast init-on-(re-)boot framework
