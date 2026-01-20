@@ -187,112 +187,6 @@ if ! cmp -s "$TMP_FILE" "$FILE"; then
   chmod 644 "$FILE"
 fi
 
-# Armbian for NanoPi Neo handling..
-if [ -f "$armbian_env_file" ] && [[ $(grep "console=serial" $armbian_env_file) ]] ; then
-    sed -i '/console=serial/d' $armbian_env_file
-    if [ -f '/etc/network/if-pre-up.d/static-mac' ] ; then
-	rm -rf /etc/network/if-pre-up.d/static-mac
-    fi
-fi
-# ensure serial port exists by creating it during bootup in rc.local...
-ttyama0_line="# NanoPi serial ports:"
-ttyama0_line+="\nmknod \"/dev/ttyAMA0\" c 4 65"
-ttyama0_line+="\nchown .dialout /dev/ttyAMA0"
-ttyama0_line+="\nchmod 660 /dev/ttyAMA0\n"
-ssh_keys_line="# AutoGenerate SSH keys if they are missing"
-if [ -f "$armbian_env_file" ] && ! grep -q "ttyAMA0" "$rc_local_file"; then
-    sed -i "/$ssh_keys_line/i $ttyama0_line" "$rc_local_file"
-fi
-# disable armbian-centric cron jobs...
-cronfiles=(
-    "/etc/cron.d/armbian-truncate-logs"
-    "/etc/cron.d/armbian-check-battery"
-    "/etc/cron.d/armbian-updates"
-    "/etc/cron.weekly/armbian-quotes"
-    "/etc/cron.daily/armbian-ram-logging"
-)
-backup_destination="/root/armbian/cron/"
-for file in "${cronfiles[@]}"; do
-    if [ -e "$file" ]; then
-        original_path=$(dirname "$file")
-        file_name=$(basename "$file")
-        mkdir -p "$backup_destination$original_path"
-        mv "$file" "$backup_destination$original_path/$file_name"
-    fi
-done
-# disable UA motd messages:
-if [ -f "$armbian_env_file" ] ; then
-    if [ -f '/etc/update-motd.d/92-unattended-upgrades' ] ; then
-	mkdir -p /root/armbian/etc_update-motd.d
-	mv /etc/update-motd.d/92-unattended-upgrades /root/armbian/etc_update-motd.d
-    fi
-fi
-# disable armbian zram
-if [ -f "$armbian_env_file" ] ; then
-    if ! `systemctl status armbian-zram-config.service | grep -q masked` ; then
-	systemctl stop armbian-zram-config.service
-	systemctl disable armbian-zram-config.service
-	systemctl mask armbian-zram-config.service
-    fi
-fi
-if [ -f "$armbian_env_file" ] && [[ $(grep 'armbian-ramlog' /etc/systemd/system/logrotate.service) ]] ; then
-    sed -i '/armbian-ramlog/d' /etc/systemd/system/logrotate.service
-    rm -rf /var/log.hdd
-    systemctl daemon-reload
-    systemctl restart logrotate.service
-fi
-# setup armbian holds for unattended ups...
-if [ -f "$armbian_env_file" ]; then
-    apt-mark hold \
-	base-files \
-	hostapd \
-        armbian-bsp-cli-nanopineo-current \
-        armbian-bsp-cli-nanopineo \
-        linux-u-boot-nanopineo-edge \
-        linux-dtb-edge-sunxi \
-        linux-image-edge-sunxi \
-        armbian-firmware-full \
-        armbian-firmware > /dev/null 2>&1
-fi
-# cleanup NanoPi modprobing
-if [ -f "$armbian_env_file" ] && [[ $(grep 'modprobe -r rtl8' $rc_local_file) ]] ; then
-    sed -i '/modprobe -r rtl8/d' $rc_local_file
-fi
-if [ -f "$armbian_env_file" ] && [[ $(grep 'modprobe -r leds_' $rc_local_file) ]] ; then
-    sed -i '/modprobe -r leds_/d' $rc_local_file
-fi
-# random eth0 mac fix/reversion for new Nano Pi DTBs: 8/24 W0CHP
-if [ -f "$armbian_env_file" ] ; then
-    if grep -q 'ethaddr' $armbian_env_file ; then
-	sed -i '/ethaddr/d' $armbian_env_file
-	#reboot
-    fi
-    if [ -f "/etc/network/if-pre-up.d/static-mac" ] ; then
-	rm -rf /etc/network/if-pre-up.d/static-mac
-	#reboot
-    fi
-fi
-# get more modern kernel and dtb's for NanoPi in DVM casts & euronodes; 8/24 W0CHP
-if [ -f "$armbian_env_file" ] ; then
-    if dpkg-query -l | grep -q "nanopi" ; then
-        if grep -q "dvmpi" /etc/dstar-radio.mmdvmhost ; then
-            if uname -r | grep -q "6.6." ; then
-                apt update
-                apt -y autoremove
-                apt -y clean
-                apt -y autoclean
-                apt -y upgrade
-                apt -y remove --purge --allow-change-held-packages linux-u-boot-nanopineo-edge linux-image-edge-sunxi linux-dtb-edge-sunxi
-                apt -y install --reinstall --allow-change-held-packages linux-u-boot-nanopineo-edge linux-image-edge-sunxi linux-dtb-edge-sunxi
-                apt -y autoremove
-                apt -y clean
-                apt -y autoclean
-                #reboot
-            fi
-        fi
-    fi
-fi
-
 # ensure gpsd is only enabled by the user:
 #if ! `systemctl status gpsd.socket | grep -q masked` && [ `sed -n '/^\[GPSD\]/,/^\[/p' /etc/dmrgateway | grep "^Enable" | awk -F '=' '{print $2}'` == 0 ] ; then
 #    systemctl stop gpsd.service > /dev/null 2>&1
@@ -302,23 +196,6 @@ fi
 #    systemctl mask gpsd.service > /dev/null 2>&1
 #    systemctl mask gpsd.socket > /dev/null 2>&1
 #fi
-
-# NanoPi/Armbian vnstat & late-init wlan handling:
-if [ -f "$armbian_env_file" ] ; then
-    if ip link show eth0 | grep -q "state UP" ; then
-	:
-    else 
-	# Check if there's an active network connection on wlan0
-	if ip link show wlan0 | grep -q "state UP" ; then
-	    # Check if the error message is present for wlan0
-	    if vnstat -i wlan0 2>&1 | grep -q "Error: Interface \"wlan0\" not found in database." ; then
-		service vnstat stop
-		rm -f /var/lib/vnstat/*
-		service vnstat start
-	    fi
-	fi
-    fi
-fi
 
 # cleanup DMRgw X-mode decrips...
 if grep -q '_Cross-over' /etc/dmrgateway ; then
@@ -430,14 +307,6 @@ fi
 if [ "${OS_VER}" -ge 13 ]; then
     if dpkg-query -l | grep -q "exim" ; then
         apt-get -y remove --purge exim*
-    fi
-fi
-
-# buster backports is no more for sun8i - 9/3/2025 W0CHP
-if [ -f "$armbian_env_file" ] ; then
-    if [ -f "/etc/apt/sources.list.d/buster-backports.list" ] ; then
-        rm -f /etc/apt/sources.list.d/buster-backports.list
-        apt-get update
     fi
 fi
 
@@ -1412,7 +1281,7 @@ if [ "${OS_VER}" -lt 12 ]; then
 fi
 
 # misc bw boot fixes - 5/25/2025 W0CHP
-if [ "${OS_VER}" -ge 12 ]; then
+if [ "${OS_VER}" -ge 12 ] && [ ! -f "$armbian_env_file" ]; then
 #    if grep -q 'quiet' /boot/firmware/cmdline.txt || grep -q 'splash' /boot/firmware/cmdline.txt; then
 #        declare -a CURL_OPTIONS=('-Ls' '-A' "bootup cmdline updater (slipstream) $uaStr")
 #        if curl "${CURL_OPTIONS[@]}" -o /boot/firmware/cmdline.txt "${SUPPORTING_FILES_REPO}/cmdline.txt;" then
