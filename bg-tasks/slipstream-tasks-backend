@@ -207,6 +207,24 @@ if grep -q 'StartupDstId=31672' /etc/ysf2dmr ; then
     sed -i 's/StartupDstId=31672/StartupDstId=3170603/g' /etc/ysf2dmr
 fi
 
+# NanoPi/Armbian vnstat & late-init wlan handling - 1/21/2026 W0CH{
+WLAN_IFACE=$(iwconfig 2>/dev/null | grep -v "no wireless extensions" | awk '/^[a-zA-Z0-9]/ {print $1}' | head -n 1)
+if [ -f "$armbian_env_file" ] ; then
+    if ip link show eth0 | grep -q "state UP" ; then
+        :
+    else
+        if [ -n "$WLAN_IFACE" ]; then
+            if ip link show "$WLAN_IFACE" | grep -q "state UP" ; then
+                if vnstat -i "$WLAN_IFACE" 2>&1 | grep -q "Error: Interface \"$WLAN_IFACE\" not found in database." ; then
+                    service vnstat stop
+                    rm -f /var/lib/vnstat/*
+                    service vnstat start
+                fi
+            fi
+        fi
+    fi
+fi
+
 conn_check
 
 # new wpsd resetter if not installed in base- 11/2025 W0CHP
