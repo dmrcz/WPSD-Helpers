@@ -1371,7 +1371,8 @@ sed -i '/^=50$/d' "$CONFIG_FILE"
 
 # install apt keys for deb 12+ - 8/11/2025 W0CHP:
 if [ "${OS_VER}" -ge 12 ]; then
-    PACKAGE="debian-archive-keyring"
+    #PACKAGE="debian-archive-keyring"
+    PACKAGE="raspbian-archive-keyring"
     if ! dpkg -s $PACKAGE >/dev/null 2>&1; then
 	apt update
 	apt install -y $PACKAGE
