@@ -215,7 +215,9 @@ if [ -f "$armbian_env_file" ] ; then
     else
         if [ -n "$WLAN_IFACE" ]; then
             if ip link show "$WLAN_IFACE" | grep -q "state UP" ; then
-                if vnstat -i "$WLAN_IFACE" 2>&1 | grep -q "Error: Interface \"$WLAN_IFACE\" not found in database." ; then
+		if vnstat -i "$WLAN_IFACE" 2>&1 | grep -q \
+                    -e "Error: Interface \"$WLAN_IFACE\" not found in database." \
+                    -e "Error: No interface matching \"$WLAN_IFACE\" found in database." ; then
                     service vnstat stop
                     rm -f /var/lib/vnstat/*
                     service vnstat start
