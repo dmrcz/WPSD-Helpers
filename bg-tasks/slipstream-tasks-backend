@@ -187,6 +187,33 @@ if ! cmp -s "$TMP_FILE" "$FILE"; then
   chmod 644 "$FILE"
 fi
 
+# disable armbian zram and reamlog - 1/24/2026 W0CHP
+if [ -f "$armbian_env_file" ] ; then
+    ZRAM_CONFIG="/etc/default/armbian-zram-config"
+
+    if [ -f "/etc/systemd/system/logrotate.service" ] && grep -q 'armbian-ramlog' /etc/systemd/system/logrotate.service ; then
+        sed -i '/armbian-ramlog/d' /etc/systemd/system/logrotate.service
+        systemctl daemon-reload
+    fi
+
+    if [ -f "$ZRAM_CONFIG" ] && grep -q "ENABLED=true" "$ZRAM_CONFIG"; then
+        systemctl stop armbian-ramlog 2>/dev/null
+        systemctl disable armbian-ramlog 2>/dev/null
+
+        sed -i 's/^ENABLED=true/ENABLED=false/' "$ZRAM_CONFIG"
+
+        systemctl stop armbian-zram-config 2>/dev/null
+        systemctl disable armbian-zram-config 2>/dev/null
+
+        if [ -d "/var/log.hdd" ]; then
+            rm -rf /var/log.hdd
+        fi
+
+        sleep 5
+        reboot
+    fi
+fi
+
 # ensure gpsd is only enabled by the user:
 #if ! `systemctl status gpsd.socket | grep -q masked` && [ `sed -n '/^\[GPSD\]/,/^\[/p' /etc/dmrgateway | grep "^Enable" | awk -F '=' '{print $2}'` == 0 ] ; then
 #    systemctl stop gpsd.service > /dev/null 2>&1
