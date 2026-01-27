@@ -234,7 +234,7 @@ if grep -q 'StartupDstId=31672' /etc/ysf2dmr ; then
     sed -i 's/StartupDstId=31672/StartupDstId=3170603/g' /etc/ysf2dmr
 fi
 
-# NanoPi/Armbian vnstat & late-init wlan handling - 1/21/2026 W0CH{
+# NanoPi/Armbian vnstat & late-init wlan handling - 1/21/2026 W0CHP
 WLAN_IFACE=$(iwconfig 2>/dev/null | grep -v "no wireless extensions" | awk '/^[a-zA-Z0-9]/ {print $1}' | head -n 1)
 if [ -f "$armbian_env_file" ] ; then
     if ip link show eth0 | grep -q "state UP" ; then
@@ -252,6 +252,34 @@ if [ -f "$armbian_env_file" ] ; then
             fi
         fi
     fi
+fi
+
+# NanoPi Neo cleanup routine to leep /var/log (tmpfs) clean and happy - 1/27/2026 W0CHP
+if [ -f "$armbian_env_file" ] ; then
+    if dpkg -s rsyslog >/dev/null 2>&1; then
+        if systemctl list-unit-files | grep -q '^rsyslog.service'; then
+            systemctl stop rsyslog.service || true
+            systemctl disable rsyslog.service || true
+        fi
+        apt-get -y purge rsyslog
+    fi
+    rm -rf /etc/rsyslog.conf /etc/rsyslog.d /var/spool/rsyslog
+    rm -f /var/log/syslog* /var/log/messages* /var/log/kern.log* /var/log/auth.log* /var/log/daemon.log* /var/log/user.log* /var/log/mail.log* /var/log/mail.err* /var/log/debug*
+    ALLOWED_LOGROTATE_FILES=(alternatives apt btmp dpkg nginx php8.2-fpm ppp unattended-upgrades wtmp)
+    cd /etc/logrotate.d
+    for file in *; do
+        [[ -e "$file" ]] || continue
+        keep=false
+        for allowed in "${ALLOWED_LOGROTATE_FILES[@]}"; do
+            if [[ "$file" == "$allowed" ]]; then
+                keep=true
+                break
+            fi
+        done
+        if [[ "$keep" == false ]]; then
+            rm -f -- "$file"
+        fi
+    done
 fi
 
 conn_check
