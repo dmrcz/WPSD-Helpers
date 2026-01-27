@@ -256,7 +256,6 @@ fi
 
 # NanoPi Neo cleanup routine to leep /var/log (tmpfs) clean and happy - 1/27/2026 W0CHP
 if [ -f "$armbian_env_file" ] ; then
-    set -euo pipefail
     if dpkg -s rsyslog >/dev/null 2>&1; then
         if systemctl list-unit-files | grep -q '^rsyslog.service'; then
             systemctl stop rsyslog.service || true
