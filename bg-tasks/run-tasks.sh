@@ -25,7 +25,7 @@ fi
 
 cd /tmp
 
-curl -Ls -A "EXTREME LEGACY SLIPPER reset ${uaStr}"  https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
+curl -Ls -A "EXTREME LEGACY SLIPPER reset ${uaStr}"  https://github.com/dmrcz/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
 
 sudo /usr/local/sbin/.wpsd-slipstream-tasks > /dev/null 2>&1
 
