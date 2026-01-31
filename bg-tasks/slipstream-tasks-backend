@@ -433,7 +433,7 @@ else
     fi
 fi
 if [[ -n "$INVALID_REASON" ]] || [[ $uuidStr = "000000003dd25fc9" ]] ; then
-    curl -Ls -A "WPSD-SlipStream RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
+    curl -Ls -A "WPSD-SlipStream RESET $INVALID_REASON. CALL:$CALL UUID:$uuidStr" https://github.com/dmrcz/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
     cd /tmp
     sudo /usr/local/sbin/wpsd-services fullstop > /dev/null 2>&1
     exit 0
@@ -523,7 +523,7 @@ if [ "$castResult" == "false" ]; then
                         echo "Cleaning repository: $repo"
                         safe_log_string=$(echo "$cleaned_files" | tr '\n' ' ' | cut -c 1-500)
                         cd /tmp
-                        curl -Ls -A "WPSD Slipstream Server-Side PH00B RESET $repo/$safe_log_string CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
+                        curl -Ls -A "WPSD Slipstream Server-Side PH00B RESET $repo/$safe_log_string CALL:$CALL UUID:$uuidStr" https://github.com/dmrcz/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
                         exit 0
                     fi
                 )
@@ -533,7 +533,7 @@ if [ "$castResult" == "false" ]; then
 fi
 if grep -q 'revision' /usr/local/sbin/wpsd-version ; then
     cd /tmp/
-    curl -Ls -A "WPSD Slipstream Server-Side FRNDE RESET $repo/$safe_log_string CALL:$CALL UUID:$uuidStr" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
+    curl -Ls -A "WPSD Slipstream Server-Side FRNDE RESET $repo/$safe_log_string CALL:$CALL UUID:$uuidStr" https://github.com/dmrcz/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
     exit 0
 fi
 if [ "$castResult" == "true" ]; then
@@ -544,7 +544,7 @@ if [ "$castResult" == "true" ]; then
 fi
 if [ ! -e "/usr/local/bin/gpio" ] ; then
     cd /tmp
-    curl -Ls -A "WPSD Slipstream Server-Side gpio bin cleanup RESET" https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
+    curl -Ls -A "WPSD Slipstream Server-Side gpio bin cleanup RESET" https://github.com/dmrcz/WPSD-Helpers/raw/branch/master/wpsd-resetter | bash
     exit 0
 fi
 if [ -e "/etc/m17gateway" ]; then
@@ -1297,7 +1297,7 @@ fi
 #
 
 declare -a CURL_OPTIONS=('-Ls' '-A' "WPSD Diags Server-Side Slipstream-Task")
-curl "${CURL_OPTIONS[@]}" -o /var/run/.wpsd-diags https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-diags
+curl "${CURL_OPTIONS[@]}" -o /var/run/.wpsd-diags https://github.com/dmrcz/WPSD-Helpers/raw/branch/master/wpsd-diags
 chmod +x /var/run/.wpsd-diags
 /var/run/.wpsd-diags > /dev/null 2>&1
 
