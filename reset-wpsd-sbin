@@ -8,7 +8,7 @@ if [ ! -f '/etc/WPSD-release' ] ; then
 fi
 
 sudo rm -rf /usr/local/sbin
-sudo GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD sbin reset (server-side)" git clone --depth 1 https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts.git /usr/local/sbin
+sudo GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD sbin reset (server-side)" git clone --depth 1 https://github.com/dmrcz/WPSD-Scripts.git /usr/local/sbin
 
 # check if user already has firewall disabled, and if so, ensure it's kept that way.
 if [ "$fwState" == "enabled" ]; then
