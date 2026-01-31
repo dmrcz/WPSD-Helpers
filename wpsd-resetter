@@ -10,7 +10,7 @@ fi
 
 if [ ! -e '/usr/local/sbin/.wpsd-common-funcs' ] ; then
     declare -a CURL_OPTIONS=('-Ls' '-A' "Slipstream-Task (server-side) common-funcs Bootstrap")
-    curl "${CURL_OPTIONS[@]}" -o /tmp/wpsd-common-funcs https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts/raw/branch/master/.wpsd-common-funcs
+    curl "${CURL_OPTIONS[@]}" -o /tmp/wpsd-common-funcs https://github.com/dmrcz/WPSD-Scripts/raw/branch/master/.wpsd-common-funcs
     source /tmp/.wpsd-common-funcs > /dev/null 2>&1
 else 
     source /usr/local/sbin/.wpsd-common-funcs > /dev/null 2>&1
@@ -24,10 +24,10 @@ wpsd-services fullstop
 cd /tmp
 
 rm -rf /usr/local/sbin
-GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD sbin reset (client-side)" git clone --depth 1 https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Scripts.git /usr/local/sbin
+GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD sbin reset (client-side)" git clone --depth 1 https://github.com/dmrcz/WPSD-Scripts.git /usr/local/sbin
 
 rm -rf /usr/local/bin
-GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD binary reset (client-side)" git clone --depth 1 https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Binaries.git /usr/local/bin
+GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD binary reset (client-side)" git clone --depth 1 https://github.com/dmrcz/WPSD-Binaries.git /usr/local/bin
 
 if [ "$fwState" == "enabled" ]; then
     /usr/local/sbin/wpsd-system-manager -efw
@@ -36,7 +36,7 @@ else
 fi
 
 rm -rf /var/www/dashboard
-GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD webcode reset (client-side)" git clone --depth 1 https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-WebCode.git /var/www/dashboard
+GIT_HTTP_CONNECT_TIMEOUT="10" GIT_HTTP_USER_AGENT="WPSD webcode reset (client-side)" git clone --depth 1 https://github.com/dmrcz/WPSD-WebCode.git /var/www/dashboard
 
 # dvmega cast-specific stuff
 castResult=$(isDVmegaCast)
