@@ -7,6 +7,6 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-curl -Ls https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
+curl -Ls https://github.com/dmrcz/WPSD-Helpers/raw/branch/master/wpsd-resetter | sudo bash
 
 exit 0
